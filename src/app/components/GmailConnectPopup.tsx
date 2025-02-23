@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { createSupabaseClient } from "@/utils/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -18,12 +18,22 @@ export default function GmailConnectPopup() {
 
   useEffect(() => {
     const checkGmailConnection = async () => {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("user_tokens")
-        .select("google_token");
-      setIsConnected(!!data?.[0]?.google_token);
-      setOpen(!data?.[0]?.google_token);
+      const supabase = createSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data } = await supabase
+          .from("email_accounts")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("provider", "gmail")
+          .single();
+
+        setIsConnected(!!data);
+        setOpen(!data);
+      }
     };
 
     checkGmailConnection();

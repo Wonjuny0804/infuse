@@ -1,18 +1,45 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
-
+import { createSupabaseClient } from "@/utils/supabase/client";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 export default function LoginButtons() {
   const loginWithGoogle = async () => {
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: "http://localhost:3000/auth/callback",
-        scopes: "email https://www.googleapis.com/auth/gmail.readonly profile",
-      },
-    });
-    console.log("Login with Google", { data, error });
+    try {
+      const supabase = createSupabaseClient();
+      toast("Initiating Google login...");
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes:
+            "email https://www.googleapis.com/auth/gmail.readonly profile",
+        },
+      });
+
+      if (error) throw error;
+
+      if (!data.url) {
+        throw new Error("No OAuth URL returned");
+      }
+
+      // Log the full URL for debugging
+      console.log("Full OAuth flow:", {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        oauthUrl: data.url,
+      });
+
+      // Instead of relying on Supabase redirect, do it manually
+      window.location.href = data.url;
+
+      toast("Redirecting to Google...");
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Login failed", {
+        description: error instanceof Error ? error.message : "Failed to login",
+      });
+    }
   };
 
   const loginWithEmail = () => {
@@ -33,6 +60,7 @@ export default function LoginButtons() {
       >
         Sign up
       </button>
+      <Toaster />
     </div>
   );
 }

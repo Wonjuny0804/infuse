@@ -3,24 +3,77 @@ import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
-  // Change default redirect to dashboard
-  const next = searchParams.get("next") ?? "/dashboard";
+  const url = new URL(request.url);
+  console.log("Full callback URL:", {
+    url: request.url,
+    params: Object.fromEntries(url.searchParams.entries()),
+    headers: Object.fromEntries(request.headers.entries()),
+  });
+
+  const code = url.searchParams.get("code");
+  const next = url.searchParams.get("next") ?? "/dashboard";
+  const origin = url.origin; // Define origin here
+
+  console.log("Auth callback received:", { code: !!code, origin });
 
   if (code) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
+    console.log("Exchange result:", {
+      success: !!data?.user,
+      error: error?.message,
+      userId: data?.user?.id,
+    });
+
+    if (error) {
+      console.error("Auth error:", error);
+      return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+    }
+
     if (!error && data?.user) {
-      // Access provider token from session
+      // First, ensure user exists in users table
+      const { error: userError } = await supabase.from("users").upsert({
+        id: data.user.id,
+        email: data.user.email,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (userError) {
+        console.error("Failed to save user:", userError);
+        return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+      }
+
       const providerToken = data.session?.provider_token;
+      const refreshToken = data.session?.refresh_token;
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1); // Token typically expires in 1 hour
+
       if (providerToken) {
-        await supabase.from("user_tokens").upsert({
-          user_id: data.user.id,
-          google_token: providerToken,
-          updated_at: new Date().toISOString(),
-        });
+        const { error: upsertError } = await supabase
+          .from("email_accounts")
+          .upsert(
+            {
+              user_id: data.user.id,
+              provider: "gmail",
+              email_address: data.user.email!,
+              oauth_token: providerToken,
+              refresh_token: refreshToken,
+              token_expires_at: expiresAt.toISOString(),
+              created_at: new Date().toISOString(),
+            },
+            {
+              onConflict: "email_address",
+              ignoreDuplicates: false,
+            }
+          );
+
+        console.log("Upsert response:", { upsertError });
+
+        if (upsertError) {
+          console.error("Failed to save email account:", upsertError);
+          return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+        }
       }
 
       const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer

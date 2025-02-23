@@ -13,10 +13,18 @@ export async function createClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set(name, value, options);
+          try {
+            cookieStore.set(name, value, options);
+          } catch {
+            // This is necessary because cookies can only be set in a Server Action or Route Handler
+          }
         },
         remove(name: string, options: CookieOptions) {
-          cookieStore.set(name, "", { ...options, maxAge: 0 });
+          try {
+            cookieStore.set(name, "", { ...options, maxAge: 0 });
+          } catch {
+            // This is necessary because cookies can only be set in a Server Action or Route Handler
+          }
         },
       },
     }

@@ -37,6 +37,7 @@ export async function GET(request: Request) {
           from: headers?.find((h) => h.name === "From")?.value,
           snippet: email.data.snippet,
           date: headers?.find((h) => h.name === "Date")?.value,
+          isUnread: email.data.labelIds?.includes("UNREAD") || false,
         };
       }) ?? []
     );
