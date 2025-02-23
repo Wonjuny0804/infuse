@@ -13,6 +13,7 @@ interface Email {
   from: string;
   snippet: string;
   date: string;
+  isUnread: boolean;
 }
 
 interface EmailAccount {

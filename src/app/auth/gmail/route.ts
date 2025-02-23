@@ -14,7 +14,8 @@ export async function GET(request: Request) {
       redirectTo: `${
         new URL(request.url).origin
       }/auth/callback?next=${returnTo}`,
-      scopes: "email https://www.googleapis.com/auth/gmail.readonly profile",
+      scopes:
+        "email https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.readonly profile",
     },
   });
 

@@ -10,17 +10,19 @@ export async function GET(request: Request) {
     );
   }
 
-  const accessToken = authHeader.split(" ")[1];
+  const url = new URL(request.url);
+  const pageToken = url.searchParams.get("pageToken");
 
   try {
+    const accessToken = authHeader.split(" ")[1];
     const oauth2Client = new google.auth.OAuth2();
     oauth2Client.setCredentials({ access_token: accessToken });
-
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
     const response = await gmail.users.messages.list({
       userId: "me",
-      maxResults: 10,
+      maxResults: 30,
+      pageToken: pageToken || undefined,
     });
 
     const emails = await Promise.all(
@@ -42,7 +44,10 @@ export async function GET(request: Request) {
       }) ?? []
     );
 
-    return NextResponse.json({ emails });
+    return NextResponse.json({
+      emails,
+      nextPageToken: response.data.nextPageToken,
+    });
   } catch (error) {
     console.error("Gmail API error:", error);
     return NextResponse.json(

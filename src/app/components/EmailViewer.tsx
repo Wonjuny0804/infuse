@@ -9,6 +9,7 @@ interface Email {
   from: string;
   snippet: string;
   date: string;
+  isUnread: boolean;
 }
 
 interface EmailAccount {
@@ -42,9 +43,11 @@ interface EmailContent {
 export default function EmailViewer({
   email,
   account,
+  onReadStateChange,
 }: {
   email?: Email;
   account?: EmailAccount;
+  onReadStateChange?: (emailId: string, isUnread: boolean) => void;
 }) {
   const [content, setContent] = useState<EmailContent>();
   const [loading, setLoading] = useState(false);
@@ -66,6 +69,7 @@ export default function EmailViewer({
           const response = await fetch(`/api/gmail/messages/${email.id}`, {
             headers: {
               Authorization: `Bearer ${emailAccount.oauth_token}`,
+              "X-Account-Id": account.id,
             },
           });
           const data = await response.json();
@@ -79,6 +83,45 @@ export default function EmailViewer({
 
     fetchEmailContent();
   }, [email, account]);
+
+  useEffect(() => {
+    if (!email || !account || !email.isUnread) return;
+
+    const markAsRead = async () => {
+      console.log("Marking email as read:", email.id);
+      try {
+        const supabase = createSupabaseClient();
+        const { data: emailAccount } = await supabase
+          .from("email_accounts")
+          .select("oauth_token")
+          .eq("id", account.id)
+          .single();
+
+        if (emailAccount?.oauth_token) {
+          const response = await fetch(`/api/gmail/messages/${email.id}/read`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${emailAccount.oauth_token}`,
+              "X-Account-Id": account.id,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ isUnread: false }),
+          });
+
+          const data = await response.json();
+          console.log("Mark as read response:", data);
+
+          if (data.success) {
+            onReadStateChange?.(email.id, false);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to mark email as read:", error);
+      }
+    };
+
+    markAsRead();
+  }, [email, account, email?.isUnread, onReadStateChange]);
 
   if (!email) {
     return (
