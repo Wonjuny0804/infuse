@@ -1,7 +1,6 @@
 "use client";
 
-import { createSupabaseClient } from "@/utils/supabase/client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Plus } from "lucide-react";
 import Image from "next/image";
-
+import useUser from "@/hooks/useUser";
+import createClient from "@/lib/supabase/client";
 interface EmailAccount {
   id: string;
   provider: string;
@@ -59,37 +59,46 @@ const getProviderIcon = (provider: string): string => {
   return PROVIDER_ICONS[provider.toLowerCase()] || "/icons/default-mail.svg";
 };
 
-export default function EmailAccountsList({
+const EmailAccountsList = ({
   onSelect,
 }: {
   onSelect: (account: EmailAccount) => void;
-}) {
+}) => {
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
 
+  const userData = useUser();
+
   useEffect(() => {
     const fetchAccounts = async () => {
-      const supabase = createSupabaseClient();
-      const { data } = await supabase
-        .from("email_accounts")
-        .select("id, provider, email_address, oauth_token")
-        .order("created_at", { ascending: false });
+      try {
+        if (!userData) return;
+        const supabase = createClient();
 
-      if (data) {
-        setAccounts(data);
-        if (data.length > 0) {
-          setSelectedId(data[0].id);
-          onSelect(data[0]);
+        const { data } = await supabase
+          .from("email_accounts")
+          .select("id, provider, email_address, oauth_token")
+          .order("created_at", { ascending: false })
+          .eq("user_id", userData?.user?.id);
+
+        if (data) {
+          setAccounts(data);
+          if (data.length > 0) {
+            setSelectedId(data[0].id);
+            onSelect(data[0]);
+          }
         }
+      } catch (error) {
+        console.log(error);
       }
     };
 
     fetchAccounts();
-  }, [onSelect]);
+  }, [onSelect, userData]);
 
-  const handleAddAccount = (path: string) => {
+  const handleAddAccount = useCallback((path: string) => {
     window.location.href = path;
-  };
+  }, []);
 
   return (
     <div className="border-r border-gray-200 h-full p-4">
@@ -155,4 +164,6 @@ export default function EmailAccountsList({
       </div>
     </div>
   );
-}
+};
+
+export default EmailAccountsList;

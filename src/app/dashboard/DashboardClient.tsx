@@ -1,51 +1,81 @@
 "use client";
 
-import { useState } from "react";
-import LogoutButton from "../components/LogoutButton";
+import { useState, useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import GmailConnectPopup from "../components/GmailConnectPopup";
 import EmailAccountsList from "../components/EmailAccountsList";
 import EmailList from "../components/EmailList";
 import EmailViewer from "../components/EmailViewer";
+import Navigation from "../components/Navigation";
+import { Email, EmailAccount } from "@/types/email";
+import { useEmailMutation } from "@/hooks/useEmailMutation";
 
-interface Email {
-  id: string;
-  subject: string;
-  from: string;
-  snippet: string;
-  date: string;
-  isUnread: boolean;
+interface DashboardClientProps {
+  initialEmailId?: string;
+  provider?: string;
 }
 
-interface EmailAccount {
-  id: string;
-  provider: string;
-  email_address: string;
-  oauth_token: string;
-}
-
-export default function DashboardClient() {
+export default function DashboardClient({
+  initialEmailId,
+}: DashboardClientProps) {
   const [selectedAccount, setSelectedAccount] = useState<EmailAccount>();
-  const [selectedEmail, setSelectedEmail] = useState<Email>();
+  const [selectedEmailId, setSelectedEmailId] = useState<string | undefined>(
+    initialEmailId
+  );
+  const queryClient = useQueryClient();
+  const { mutate: mutateEmailStatus } = useEmailMutation();
+  const searchParams = useSearchParams();
+
+  // Update selectedEmailId when URL changes
+  useEffect(() => {
+    const emailId = searchParams.get("emailId");
+    if (emailId) {
+      setSelectedEmailId(emailId);
+    }
+  }, [searchParams]);
+
+  const handleSelectEmail = useCallback(
+    (email: Email) => {
+      if (!selectedAccount) return;
+
+      // Update URL without navigation
+      const newUrl = `/dashboard/${selectedAccount.provider}?emailId=${email.id}`;
+      window.history.pushState({}, "", newUrl);
+
+      setSelectedEmailId(email.id);
+      queryClient.setQueryData(["email", email.id], email);
+
+      mutateEmailStatus({
+        emailId: email.id,
+        accountId: selectedAccount.id,
+        isUnread: false,
+      });
+    },
+    [queryClient, selectedAccount, mutateEmailStatus]
+  );
 
   return (
     <div className="h-screen flex flex-col">
       <div className="flex justify-between items-center p-4 border-b">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <LogoutButton />
+        <Navigation />
       </div>
       <GmailConnectPopup />
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-1/6">
+        <div className="w-1/6 border-r">
           <EmailAccountsList onSelect={setSelectedAccount} />
         </div>
-        <div className="w-1/4">
+        <div className="w-1/4 border-r">
           <EmailList
             account={selectedAccount}
-            onSelectEmail={setSelectedEmail}
+            selectedEmailId={selectedEmailId}
+            onSelectEmail={handleSelectEmail}
           />
         </div>
-        <div className="flex-1">
-          <EmailViewer email={selectedEmail} account={selectedAccount} />
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 overflow-auto border-b">
+            <EmailViewer emailId={selectedEmailId} account={selectedAccount} />
+          </div>
         </div>
       </div>
     </div>

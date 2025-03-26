@@ -1,30 +1,17 @@
 // The client you created from the Server-Side Auth instructions
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  console.log("Full callback URL:", {
-    url: request.url,
-    params: Object.fromEntries(url.searchParams.entries()),
-    headers: Object.fromEntries(request.headers.entries()),
-  });
 
   const code = url.searchParams.get("code");
   const next = url.searchParams.get("next") ?? "/dashboard";
   const origin = url.origin; // Define origin here
 
-  console.log("Auth callback received:", { code: !!code, origin });
-
   if (code) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-    console.log("Exchange result:", {
-      success: !!data?.user,
-      error: error?.message,
-      userId: data?.user?.id,
-    });
 
     if (error) {
       console.error("Auth error:", error);
@@ -45,7 +32,7 @@ export async function GET(request: Request) {
       }
 
       const providerToken = data.session?.provider_token;
-      const refreshToken = data.session?.refresh_token;
+      const refreshToken = data.session?.provider_refresh_token;
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1); // Token typically expires in 1 hour
 
@@ -67,8 +54,6 @@ export async function GET(request: Request) {
               ignoreDuplicates: false,
             }
           );
-
-        console.log("Upsert response:", { upsertError });
 
         if (upsertError) {
           console.error("Failed to save email account:", upsertError);

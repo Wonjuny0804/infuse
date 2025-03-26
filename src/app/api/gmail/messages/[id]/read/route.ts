@@ -1,68 +1,68 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { refreshGmailToken } from "@/utils/oauth/refreshToken";
+import { createClient } from "@supabase/supabase-js";
+import { GaxiosError } from "googleapis-common";
+import oauth2Client from "@/lib/google";
 
 export async function POST(
   request: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader) {
-    return NextResponse.json(
-      { error: "No authorization token" },
-      { status: 401 }
-    );
-  }
-
+  const { params } = await context;
+  const { id } = await params;
   try {
-    let accessToken = authHeader.split(" ")[1];
-    if (!accessToken) {
+    const accountId = request.headers.get("X-Account-Id");
+    if (!accountId) {
       return NextResponse.json(
-        { error: "Invalid authorization token" },
+        { error: "Missing account ID" },
         { status: 401 }
       );
     }
-    const { id: messageId } = await context.params;
+
     const { isUnread } = await request.json();
 
-    console.log("Modifying message:", { messageId, isUnread });
+    // Get access token from Supabase
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    const oauth2Client = new google.auth.OAuth2();
-    oauth2Client.setCredentials({ access_token: accessToken });
+    const { data: account } = await supabase
+      .from("email_accounts")
+      .select("oauth_token")
+      .eq("id", accountId)
+      .single();
+
+    if (!account?.oauth_token) {
+      throw new Error("No access token found");
+    }
+    oauth2Client.setCredentials({ access_token: account.oauth_token });
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
     try {
-      const result = await gmail.users.messages.modify({
+      await gmail.users.messages.modify({
         userId: "me",
-        id: messageId,
+        id,
         requestBody: {
-          removeLabelIds: isUnread ? [] : ["UNREAD"],
-          addLabelIds: isUnread ? ["UNREAD"] : [],
+          removeLabelIds: isUnread ? ["UNREAD"] : [],
+          addLabelIds: isUnread ? [] : ["UNREAD"],
         },
       });
+      console.log("=== success modify message ===");
 
-      console.log("Modify result:", result.data);
       return NextResponse.json({ success: true });
     } catch (error: unknown) {
-      if ((error as { code?: number }).code === 401) {
-        const accountId = request.headers.get("X-Account-Id");
-        if (!accountId) {
-          throw new Error("Account ID required for token refresh");
-        }
-
-        const newToken = await refreshGmailToken(accountId);
-        if (!newToken) {
-          throw new Error("Failed to refresh token");
-        }
-        accessToken = newToken;
-
-        oauth2Client.setCredentials({ access_token: accessToken });
+      if (
+        error instanceof GaxiosError &&
+        error.message?.includes("Invalid Credentials")
+      ) {
+        // Retry the request...
         await gmail.users.messages.modify({
           userId: "me",
-          id: messageId,
+          id,
           requestBody: {
-            removeLabelIds: isUnread ? [] : ["UNREAD"],
-            addLabelIds: isUnread ? ["UNREAD"] : [],
+            removeLabelIds: isUnread ? ["UNREAD"] : [],
+            addLabelIds: isUnread ? [] : ["UNREAD"],
           },
         });
 
@@ -71,9 +71,9 @@ export async function POST(
       throw error;
     }
   } catch (error) {
-    console.error("Gmail API error:", error);
+    console.error("Gmail API error /read:", error);
     return NextResponse.json(
-      { error: "Failed to update message status" },
+      { error: "Failed to update message" },
       { status: 500 }
     );
   }

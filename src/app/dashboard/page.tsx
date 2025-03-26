@@ -1,16 +1,15 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import DashboardClient from "./DashboardClient";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
-    redirect("/");
+  if (!user) {
+    redirect("/signin");
   }
 
-  return <DashboardClient />;
+  redirect("/dashboard/gmail");
 }

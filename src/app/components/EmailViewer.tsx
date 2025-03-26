@@ -1,127 +1,60 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createSupabaseClient } from "@/utils/supabase/client";
+import { useEmailContent } from "@/hooks/useEmails";
+import { EmailAccount, Email } from "@/types/email";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 
-interface Email {
-  id: string;
-  subject: string;
-  from: string;
-  snippet: string;
-  date: string;
-  isUnread: boolean;
-}
-
-interface EmailAccount {
-  id: string;
-  provider: string;
-  email_address: string;
-  oauth_token: string;
-}
-
-interface EmailContent {
-  html?: string;
-  text?: string;
-  headers?: {
-    from: string;
-    to: string;
-    cc?: string;
-    bcc?: string;
-    subject: string;
-    date: string;
-  };
-  attachments?: Array<{
-    id: string;
-    filename: string;
-    contentType: string;
-    size: number;
-  }>;
-  threadId?: string;
-  labelIds?: string[];
-}
-
-export default function EmailViewer({
-  email,
-  account,
-  onReadStateChange,
-}: {
-  email?: Email;
+interface EmailViewerProps {
+  emailId?: string;
   account?: EmailAccount;
-  onReadStateChange?: (emailId: string, isUnread: boolean) => void;
-}) {
-  const [content, setContent] = useState<EmailContent>();
-  const [loading, setLoading] = useState(false);
+}
 
-  useEffect(() => {
-    if (!email || !account) return;
-
-    const fetchEmailContent = async () => {
-      setLoading(true);
-      try {
-        const supabase = createSupabaseClient();
-        const { data: emailAccount } = await supabase
-          .from("email_accounts")
-          .select("oauth_token")
-          .eq("id", account.id)
-          .single();
-
-        if (emailAccount?.oauth_token) {
-          const response = await fetch(`/api/gmail/messages/${email.id}`, {
-            headers: {
-              Authorization: `Bearer ${emailAccount.oauth_token}`,
-              "X-Account-Id": account.id,
-            },
-          });
-          const data = await response.json();
-          setContent(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch email content:", error);
+const EmailViewer = ({ emailId, account }: EmailViewerProps) => {
+  const queryClient = useQueryClient();
+  const { data: email } = useQuery<Email>({
+    queryKey: ["email", emailId] as const,
+    queryFn: () => {
+      const cachedEmail = queryClient.getQueryData<Email>(["email", emailId]);
+      if (!cachedEmail) {
+        throw new Error("Email not found in cache");
       }
-      setLoading(false);
+      return cachedEmail;
+    },
+    enabled: !!emailId,
+    staleTime: Infinity,
+  });
+  const { data: content, isLoading } = useEmailContent(emailId, account?.id);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  useEffect(() => {
+    const handleIframeLoad = () => {
+      if (!iframeRef.current) return;
+      const iframeDoc = iframeRef.current.contentDocument;
+      if (!iframeDoc) return;
+
+      // Select all links inside the iframe and modify their behavior
+      const links = iframeDoc.querySelectorAll("a");
+      links.forEach((link) => {
+        link.setAttribute("target", "_blank");
+        link.setAttribute("rel", "noopener noreferrer");
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          window.open(link.href, "_blank");
+        });
+      });
     };
 
-    fetchEmailContent();
-  }, [email, account]);
+    const iframe = iframeRef.current;
+    if (iframe) {
+      iframe.addEventListener("load", handleIframeLoad);
+    }
 
-  useEffect(() => {
-    if (!email || !account || !email.isUnread) return;
-
-    const markAsRead = async () => {
-      console.log("Marking email as read:", email.id);
-      try {
-        const supabase = createSupabaseClient();
-        const { data: emailAccount } = await supabase
-          .from("email_accounts")
-          .select("oauth_token")
-          .eq("id", account.id)
-          .single();
-
-        if (emailAccount?.oauth_token) {
-          const response = await fetch(`/api/gmail/messages/${email.id}/read`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${emailAccount.oauth_token}`,
-              "X-Account-Id": account.id,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ isUnread: false }),
-          });
-
-          const data = await response.json();
-          console.log("Mark as read response:", data);
-
-          if (data.success) {
-            onReadStateChange?.(email.id, false);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to mark email as read:", error);
+    return () => {
+      if (iframe) {
+        iframe.removeEventListener("load", handleIframeLoad);
       }
     };
-
-    markAsRead();
-  }, [email, account, email?.isUnread, onReadStateChange]);
+  }, []);
 
   if (!email) {
     return (
@@ -131,7 +64,7 @@ export default function EmailViewer({
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
         Loading email...
@@ -159,8 +92,9 @@ export default function EmailViewer({
             <iframe
               srcDoc={content.html}
               className="w-full h-full border-none"
-              sandbox="allow-same-origin"
+              sandbox="allow-same-origin allow-scripts allow-popups"
               style={{ minHeight: "calc(100vh - 300px)" }}
+              ref={iframeRef}
             />
           </div>
         ) : (
@@ -194,4 +128,6 @@ export default function EmailViewer({
       )}
     </div>
   );
-}
+};
+
+export default EmailViewer;

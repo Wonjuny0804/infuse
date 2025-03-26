@@ -1,22 +1,38 @@
 "use client";
 
-import { createSupabaseClient } from "@/utils/supabase/client";
+import { createSupabaseClient } from "@/lib/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-export default function LoginButtons() {
+import { useState } from "react";
+
+const SCOPES = [
+  "email",
+  "https://www.googleapis.com/auth/gmail.addons.current.message.readonly",
+  "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/gmail.readonly",
+  "profile",
+];
+
+const LoginButtons = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const loginWithGoogle = async () => {
     try {
       const supabase = createSupabaseClient();
       toast("Initiating Google login...");
-
+      setIsLoading(true);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          scopes:
-            "email https://www.googleapis.com/auth/gmail.readonly profile",
+          scopes: SCOPES.join(" "),
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
         },
       });
+
+      setIsLoading(false);
 
       if (error) throw error;
 
@@ -24,17 +40,11 @@ export default function LoginButtons() {
         throw new Error("No OAuth URL returned");
       }
 
-      // Log the full URL for debugging
-      console.log("Full OAuth flow:", {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        oauthUrl: data.url,
-      });
-
-      // Instead of relying on Supabase redirect, do it manually
       window.location.href = data.url;
 
       toast("Redirecting to Google...");
     } catch (error) {
+      setIsLoading(false);
       console.error("Login error:", error);
       toast.error("Login failed", {
         description: error instanceof Error ? error.message : "Failed to login",
@@ -43,6 +53,7 @@ export default function LoginButtons() {
   };
 
   const loginWithEmail = () => {
+    // TODO: Implement email login
     console.log("Login with Email");
   };
 
@@ -61,6 +72,9 @@ export default function LoginButtons() {
         Sign up
       </button>
       <Toaster />
+      {isLoading && <div className="text-center">Loading...</div>}
     </div>
   );
-}
+};
+
+export default LoginButtons;

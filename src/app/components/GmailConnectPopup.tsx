@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createSupabaseClient } from "@/utils/supabase/client";
+import createClient from "@/lib/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -12,34 +12,47 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export default function GmailConnectPopup() {
-  const [open, setOpen] = useState(true);
+const GmailConnectPopup = () => {
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const checkGmailConnection = async () => {
-      const supabase = createSupabaseClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-      if (user) {
-        const { data } = await supabase
-          .from("email_accounts")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("provider", "gmail")
-          .single();
+        if (user) {
+          const { data } = await supabase
+            .from("email_accounts")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("provider", "gmail")
+            .single();
 
-        setIsConnected(!!data);
-        setOpen(!data);
+          setIsConnected(!!data);
+          setOpen(!data);
+        }
+      } catch (error) {
+        console.error("Error checking Gmail connection:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkGmailConnection();
   }, []);
 
-  if (!open || isConnected) return null;
+  if (isLoading) {
+    return null;
+  }
+
+  if (isConnected) {
+    return null;
+  }
 
   const handleGmailConnect = () => {
     window.location.href = "/auth/gmail";
@@ -64,4 +77,6 @@ export default function GmailConnectPopup() {
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default GmailConnectPopup;
