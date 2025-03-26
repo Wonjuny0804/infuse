@@ -9,7 +9,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useQueryClient } from "@tanstack/react-query";
 
 const SCOPES = [
   "email",
@@ -24,7 +23,7 @@ const SignInForm = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const queryClient = useQueryClient();
+
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,9 +31,6 @@ const SignInForm = () => {
     setIsLoading(true);
 
     try {
-      // Clear React Query cache before signing in
-      queryClient.clear();
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -60,9 +56,6 @@ const SignInForm = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      // Clear React Query cache before signing in
-      queryClient.clear();
-
       toast("Initiating Google login...");
       setIsLoading(true);
 

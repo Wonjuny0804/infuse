@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, FileText } from "lucide-react";
+import { Mail, FileText, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
 
 const Navigation = () => {
   const pathname = usePathname();
 
-  const isEmailsActive = pathname.startsWith("/dashboard");
-  const isSummariesActive = pathname.startsWith("/summaries");
+  const isActive = (path: string) => pathname.startsWith(path);
 
   return (
     <>
@@ -21,7 +20,7 @@ const Navigation = () => {
           <Link
             href="/dashboard/gmail"
             className={`flex items-center gap-2 ${
-              isEmailsActive
+              isActive("/dashboard/gmail")
                 ? "text-blue-600 font-medium"
                 : "text-gray-600 hover:text-gray-900"
             }`}
@@ -32,7 +31,7 @@ const Navigation = () => {
           <Link
             href="/summaries"
             className={`flex items-center gap-2 ${
-              isSummariesActive
+              isActive("/summaries")
                 ? "text-blue-600 font-medium"
                 : "text-gray-600 hover:text-gray-900"
             }`}
@@ -40,8 +39,20 @@ const Navigation = () => {
             <FileText className="w-4 h-4" />
             Summaries
           </Link>
+          <Link
+            href="/settings"
+            className={`flex items-center gap-2 ${
+              isActive("/settings")
+                ? "text-blue-600 font-medium"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </Link>
         </nav>
       </div>
+
       <div className="flex justify-end">
         <LogoutButton />
       </div>
