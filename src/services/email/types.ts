@@ -23,25 +23,15 @@ export interface EmailContent {
 
 export interface EmailService {
   // List emails with pagination
-  listEmails: (params: {
-    accountId: string;
-    accessToken: string;
-    pageToken?: string;
-  }) => Promise<EmailList>;
+  listEmails: (params: { pageToken?: string }) => Promise<EmailList>;
 
   // Get single email content
-  getEmail: (params: {
-    emailId: string;
-    accountId: string;
-    accessToken: string;
-  }) => Promise<EmailContent>;
+  getEmail: (params: { emailId: string }) => Promise<EmailContent>;
 
   // Update email read/unread status
   updateReadStatus: (params: {
     emailId: string;
-    accountId: string;
     isUnread: boolean;
-    accessToken: string;
   }) => Promise<void>;
 
   // Add other email operations here as needed

@@ -12,3 +12,10 @@ export const formatTime = (dateString: string) => {
     minute: "2-digit",
   });
 };
+
+export const base64URLEncode = (str: ArrayBuffer) => {
+  return btoa(String.fromCharCode(...new Uint8Array(str)))
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+};

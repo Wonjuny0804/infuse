@@ -2,11 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 @layer base {
   :root {
-
     --background: 0 0% 100%;
 
     --foreground: 224 71.4% 4.1%;
@@ -55,10 +52,9 @@
 
     --chart-5: 27 87% 67%;
 
-    --radius: 0.5rem
+    --radius: 0.5rem;
   }
   .dark {
-
     --background: 224 71.4% 4.1%;
 
     --foreground: 210 20% 98%;
@@ -105,11 +101,9 @@
 
     --chart-4: 280 65% 60%;
 
-    --chart-5: 340 75% 55%
+    --chart-5: 340 75% 55%;
   }
 }
-
-
 
 @layer base {
   * {
@@ -117,5 +111,52 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .animated-gradient-text {
+    --bg-size: 400%;
+    background: linear-gradient(
+        90deg,
+        #ffffff,
+        #a3a3a3,
+        #ffffff,
+        #e5e5e5,
+        #ffffff
+      )
+      0 0 / var(--bg-size) 100%;
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+    animation: move-bg 12s linear infinite;
+  }
+
+  @keyframes move-bg {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: var(--bg-size) 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animated-gradient-text {
+      animation: none;
+      background-position: 0 0;
+    }
+  }
+}
+
+@layer utilities {
+  .bg-grid-pattern {
+    background-image: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.05) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
 }

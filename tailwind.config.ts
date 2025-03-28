@@ -52,11 +52,18 @@ export default {
           "5": "hsl(var(--chart-5))",
         },
         brand: {
-          navy: "#2B4570", // Deep navy blue
-          teal: "#48A9A6", // Teal/turquoise
-          sky: "#9AD4D6", // Light blue
-          cream: "#F4E9CD", // Warm cream
-          orange: "#E09F3E", // Warm orange
+          dark: "#272727", // Main dark color
+          light: "#ffffff", // Main light color
+          gray: {
+            100: "#f5f5f5",
+            200: "#e5e5e5",
+            300: "#d4d4d4",
+            400: "#a3a3a3",
+            500: "#737373",
+            600: "#525252",
+            700: "#404040",
+            800: "#262626",
+          },
         },
       },
       borderRadius: {

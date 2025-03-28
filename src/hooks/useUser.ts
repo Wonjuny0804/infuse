@@ -9,9 +9,10 @@ const useUser = () => {
       const { data: user } = await supabase.auth.getUser();
       return user;
     },
+    staleTime: 0,
   });
 
-  return user;
+  return user?.user;
 };
 
 export default useUser;

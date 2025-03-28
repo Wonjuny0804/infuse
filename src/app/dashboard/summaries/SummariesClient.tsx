@@ -6,7 +6,7 @@ import { useState } from "react";
 import useSummaries from "@/hooks/useSummaries";
 import useSummaryMutation from "@/hooks/useSummaryMutation";
 import useUser from "@/hooks/useUser";
-import SummaryDialog from "../components/SummaryDialog";
+import SummaryDialog from "@/app/components/SummaryDialog";
 import createClient from "@/lib/supabase/client";
 
 export default function SummariesClient() {
@@ -15,14 +15,12 @@ export default function SummariesClient() {
 
   const { data: summaries, isLoading, error } = useSummaries();
   const { mutate: markAsListened } = useSummaryMutation();
-  const data = useUser();
+  const userData = useUser();
 
   // TODO: There should be a better way to handle this.
-  if (!data || !data.user) {
+  if (!userData) {
     return <div>Loading your summaries...</div>;
   }
-
-  const { user } = data;
 
   const handlePlayAudio = async (summaryId: string, audioUrl: string) => {
     if (currentlyPlaying === summaryId) {
@@ -58,7 +56,7 @@ export default function SummariesClient() {
         setCurrentlyPlaying(null);
         URL.revokeObjectURL(url); // Clean up the blob URL
         try {
-          await markAsListened({ userId: user.id, summaryId });
+          await markAsListened({ userId: userData.id, summaryId });
         } catch (error) {
           console.error("Failed to mark summary as listened:", error);
         }

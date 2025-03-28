@@ -31,18 +31,28 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/auth/auth-code-error`);
       }
 
-      const providerToken = data.session?.provider_token;
-      const refreshToken = data.session?.provider_refresh_token;
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 1); // Token typically expires in 1 hour
+      // Get provider information from auth metadata
+      const provider = data.user.app_metadata.provider;
 
-      if (providerToken) {
+      // Only proceed with token storage if we have a provider token
+      if (data.session?.provider_token) {
+        // Handle Google OAuth tokens
+        const providerToken = data.session.provider_token;
+        const refreshToken = data.session.provider_refresh_token;
+
+        // Calculate token expiration - for Google typically 1 hour
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 1);
+
+        // Determine the correct provider value for the database
+        const providerValue = provider === "google" ? "gmail" : provider;
+
         const { error: upsertError } = await supabase
           .from("email_accounts")
           .upsert(
             {
               user_id: data.user.id,
-              provider: "gmail",
+              provider: providerValue,
               email_address: data.user.email!,
               oauth_token: providerToken,
               refresh_token: refreshToken,

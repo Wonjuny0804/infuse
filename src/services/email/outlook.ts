@@ -1,15 +1,15 @@
 import { EmailList, EmailContent } from "./types";
-import { refreshGmailToken } from "@/lib/auth/refreshToken";
+import { refreshOutlookToken } from "@/lib/auth/refreshToken";
 import EmailService from "./abstract";
 
-class GmailService extends EmailService {
+export default class OutlookService extends EmailService {
   constructor(accessToken: string, accountId: string) {
     super(accessToken, accountId);
   }
 
-  async refreshAccessToken(): Promise<string> {
+  async refreshAccessToken(accountId: string): Promise<string> {
     try {
-      const newToken = await refreshGmailToken(this.accountId);
+      const newToken = await refreshOutlookToken(accountId);
       if (!newToken) {
         throw new Error("Failed to refresh token");
       }
@@ -29,7 +29,7 @@ class GmailService extends EmailService {
   }): Promise<EmailList> {
     try {
       const response = await fetch(
-        `/api/gmail/list${pageToken ? `?pageToken=${pageToken}` : ""}`,
+        `/api/outlook/list${pageToken ? `?pageToken=${pageToken}` : ""}`,
         {
           headers: {
             Authorization: `Bearer ${this.accessToken}`,
@@ -39,7 +39,7 @@ class GmailService extends EmailService {
       );
 
       if (response.status === 401 && !isRetry) {
-        const newToken = await this.refreshAccessToken();
+        const newToken = await this.refreshAccessToken(this.accountId);
         this.accessToken = newToken;
         return this.listEmails({
           pageToken,
@@ -66,7 +66,7 @@ class GmailService extends EmailService {
     isRetry?: boolean;
   }): Promise<EmailContent> {
     try {
-      const response = await fetch(`/api/gmail/messages/${emailId}`, {
+      const response = await fetch(`/api/outlook/messages/${emailId}`, {
         headers: {
           Authorization: `Bearer ${this.accessToken}`,
           "X-Account-Id": this.accountId,
@@ -74,7 +74,7 @@ class GmailService extends EmailService {
       });
 
       if (response.status === 401 && !isRetry) {
-        const newToken = await this.refreshAccessToken();
+        const newToken = await this.refreshAccessToken(this.accountId);
         this.accessToken = newToken;
         return this.getEmail({
           emailId,
@@ -96,29 +96,39 @@ class GmailService extends EmailService {
   async updateReadStatus({
     emailId,
     isUnread,
+    isRetry = false,
   }: {
     emailId: string;
     isUnread: boolean;
+    isRetry?: boolean;
   }): Promise<void> {
     try {
-      const response = await fetch(`/api/gmail/messages/${emailId}/read`, {
+      const response = await fetch(`/api/outlook/messages/${emailId}/read`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.accessToken}`,
-          "Content-Type": "application/json",
           "X-Account-Id": this.accountId,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ isUnread }),
       });
 
+      if (response.status === 401 && !isRetry) {
+        const newToken = await this.refreshAccessToken(this.accountId);
+        this.accessToken = newToken;
+        return this.updateReadStatus({
+          emailId,
+          isUnread,
+          isRetry: true,
+        });
+      }
+
       if (!response.ok) {
-        throw new Error("Failed to update email status");
+        throw new Error("Failed to update read status");
       }
     } catch (error) {
-      console.error("Error in updateReadStatus:", error);
+      console.error("Error updating read status:", error);
       throw error;
     }
   }
 }
-
-export default GmailService;

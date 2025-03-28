@@ -1,3 +1,4 @@
+// this is used for the emails list, which will probably contain only the metadata of the email.
 export interface Email {
   id: string;
   subject: string;
@@ -6,6 +7,10 @@ export interface Email {
   date: string;
   isUnread: boolean;
   onReadStateChange?: (emailId: string, isUnread: boolean) => void;
+  provider: string;
+  read: boolean;
+  preview: string;
+  accountId: string;
 }
 
 export interface EmailContent {
@@ -42,4 +47,9 @@ export interface EmailAccount {
   provider: string;
   email_address: string;
   oauth_token: string;
+  created_at: string;
+  imap_settings: string | null;
+  refresh_token: string;
+  token_expires_at: string;
+  user_id: string;
 }

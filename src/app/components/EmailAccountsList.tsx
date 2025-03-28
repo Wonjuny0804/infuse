@@ -12,6 +12,9 @@ import { Plus } from "lucide-react";
 import Image from "next/image";
 import useUser from "@/hooks/useUser";
 import createClient from "@/lib/supabase/client";
+import YahooConnectDialog from "./YahooConnectDialog";
+import OutlookConnectDialog from "./OutlookConnectDialog";
+
 interface EmailAccount {
   id: string;
   provider: string;
@@ -66,6 +69,8 @@ const EmailAccountsList = ({
 }) => {
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
+  const [showYahooDialog, setShowYahooDialog] = useState(false);
+  const [showOutlookDialog, setShowOutlookDialog] = useState(false);
 
   const userData = useUser();
 
@@ -79,7 +84,7 @@ const EmailAccountsList = ({
           .from("email_accounts")
           .select("id, provider, email_address, oauth_token")
           .order("created_at", { ascending: false })
-          .eq("user_id", userData?.user?.id);
+          .eq("user_id", userData?.id);
 
         if (data) {
           setAccounts(data);
@@ -100,6 +105,16 @@ const EmailAccountsList = ({
     window.location.href = path;
   }, []);
 
+  const handleProviderSelect = (providerId: string) => {
+    if (providerId === "yahoo") {
+      setShowYahooDialog(true);
+    } else if (providerId === "outlook") {
+      setShowOutlookDialog(true);
+    } else {
+      handleAddAccount(`/auth/${providerId}`);
+    }
+  };
+
   return (
     <div className="border-r border-gray-200 h-full p-4">
       <div className="flex items-center justify-between mb-4">
@@ -119,7 +134,7 @@ const EmailAccountsList = ({
             {EMAIL_PROVIDERS.map((provider) => (
               <DropdownMenuItem
                 key={provider.id}
-                onClick={() => handleAddAccount(provider.path)}
+                onClick={() => handleProviderSelect(provider.id)}
                 className="flex items-center gap-2"
               >
                 <div className="relative w-5 h-5">
@@ -162,6 +177,15 @@ const EmailAccountsList = ({
           </div>
         ))}
       </div>
+
+      <YahooConnectDialog
+        open={showYahooDialog}
+        onOpenChange={setShowYahooDialog}
+      />
+      <OutlookConnectDialog
+        open={showOutlookDialog}
+        onOpenChange={setShowOutlookDialog}
+      />
     </div>
   );
 };

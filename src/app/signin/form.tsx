@@ -149,6 +149,7 @@ const SignInForm = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              placeholder={"••••••••"}
             />
           </div>
 
@@ -160,7 +161,7 @@ const SignInForm = () => {
 
           <Button
             type="submit"
-            className="w-full bg-brand-navy hover:bg-brand-navy/90 text-white"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
             disabled={isLoading}
           >
             {isLoading ? "Signing in..." : "Sign in"}
