@@ -29,7 +29,9 @@ class GmailService extends EmailService {
   }): Promise<EmailList> {
     try {
       const response = await fetch(
-        `/api/gmail/list${pageToken ? `?pageToken=${pageToken}` : ""}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/gmail/list${
+          pageToken ? `?pageToken=${pageToken}` : ""
+        }`,
         {
           headers: {
             Authorization: `Bearer ${this.accessToken}`,
@@ -66,12 +68,15 @@ class GmailService extends EmailService {
     isRetry?: boolean;
   }): Promise<EmailContent> {
     try {
-      const response = await fetch(`/api/gmail/messages/${emailId}`, {
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          "X-Account-Id": this.accountId,
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/gmail/messages/${emailId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            "X-Account-Id": this.accountId,
+          },
+        }
+      );
 
       if (response.status === 401 && !isRetry) {
         const newToken = await this.refreshAccessToken();
@@ -86,7 +91,20 @@ class GmailService extends EmailService {
         throw new Error("Failed to fetch email content");
       }
 
-      return response.json();
+      // data has data.html and data.text
+      const data = await response.json();
+
+      // Transform the content array into html/text content
+      const html = data.html;
+      const text = data.text;
+
+      return {
+        headers: data.headers,
+        html: html || undefined,
+        text: text || undefined,
+        attachments: data.attachments,
+        labelIds: data.labelIds,
+      };
     } catch (error) {
       console.error("Error in getEmail:", error);
       throw error;
@@ -101,15 +119,18 @@ class GmailService extends EmailService {
     isUnread: boolean;
   }): Promise<void> {
     try {
-      const response = await fetch(`/api/gmail/messages/${emailId}/read`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          "Content-Type": "application/json",
-          "X-Account-Id": this.accountId,
-        },
-        body: JSON.stringify({ isUnread }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/gmail/messages/${emailId}/read`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            "Content-Type": "application/json",
+            "X-Account-Id": this.accountId,
+          },
+          body: JSON.stringify({ isUnread }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update email status");

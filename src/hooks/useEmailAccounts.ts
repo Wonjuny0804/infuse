@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import createClient from "@/lib/supabase/client";
 import { EmailAccount } from "@/types/email";
+
 const useEmailAccounts = (userId: string) => {
   const supabase = createClient();
 

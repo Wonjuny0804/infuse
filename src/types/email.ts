@@ -3,6 +3,8 @@ export interface Email {
   id: string;
   subject: string;
   from: string;
+  sender: string;
+  senderEmail: string;
   snippet: string;
   date: string;
   isUnread: boolean;
@@ -13,6 +15,7 @@ export interface Email {
   accountId: string;
 }
 
+// this is used for the email content, which will contain the full email content.
 export interface EmailContent {
   html?: string;
   text?: string;
@@ -52,4 +55,36 @@ export interface EmailAccount {
   refresh_token: string;
   token_expires_at: string;
   user_id: string;
+}
+
+export interface EmailMessage {
+  id: string;
+  provider: string;
+  subject: string;
+  from: string;
+  to: string[];
+  body: string;
+  date: Date;
+  attachments: Array<{
+    filename: string;
+    contentType: string;
+    size: number;
+  }>;
+}
+
+export type EmailProvider = "gmail" | "outlook" | "yahoo" | "naver" | "other";
+
+export interface UnifiedEmailListResponse {
+  emails: Email[];
+  nextCursor?: string;
+  error?: {
+    provider: string;
+    message: string;
+  }[];
+}
+
+export interface EmailList {
+  emails?: Email[];
+  messages?: Email[];
+  nextPageToken?: string;
 }

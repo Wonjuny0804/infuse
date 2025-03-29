@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 // import EmailsClient from "@/app/components/EmailsClient";
 import useUser from "@/hooks/useUser";
 import useEmailAccounts from "@/hooks/useEmailAccounts";
 import EmailsClient from "@/app/components/EmailsClient";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PlusCircledIcon } from "@radix-ui/react-icons";
-import EmailIntegrationModal from "@/app/components/EmailIntegrationModal";
-import { EmailAccount } from "@/app/dashboard/emails/layout";
+// import EmailIntegrationModal from "@/app/components/EmailIntegrationModal";
+// import { EmailAccount } from "@/app/dashboard/emails/layout";
 import { useEmails } from "@/hooks/useEmails";
 import Image from "next/image";
 
@@ -25,43 +25,40 @@ const EmailsPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedAccountId = searchParams.get("accountId");
+  const selectedEmailId = searchParams.get("emailId");
   const userData = useUser();
-  const [showModal, setShowModal] = useState(false);
-  console.log(selectedAccountId);
+  // const [_, setShowModal] = useState(false);
 
   const {
     data: accounts = [],
-    isLoading,
-    error,
+    isLoading: isAccountsLoading,
+    error: accountsError,
   } = useEmailAccounts(userData?.id || "");
-  console.log(accounts);
 
-  // after email accounts are loaded, we can fetch the emails for the selected providers.
-  const { data: emails, isLoading: isEmailsLoading } = useEmails(
-    userData?.id || "",
-    selectedAccountId || ""
-  );
-  console.log(emails);
+  const {
+    data: emailsData,
+    isLoading: isEmailsLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useEmails();
 
-  if (!userData || isLoading || isEmailsLoading) {
+  const handleLoadMore = () => {
+    if (!isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  if (!userData || isAccountsLoading || isEmailsLoading) {
     return <div>Loading...</div>;
   }
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
+  if (accountsError) {
+    return <div>Error: {accountsError.message}</div>;
   }
 
   const handleAddAccount = () => {
-    setShowModal(true);
-  };
-
-  const handleAccountAdded = (newAccount: EmailAccount) => {
-    // You would typically invalidate or update your query cache here
-    // For example with react-query: queryClient.invalidateQueries(['emailAccounts'])
-
-    // Navigate to the new account's provider page with query parameter
-    router.push(`/dashboard/emails?provider=${newAccount.provider}`);
-    setShowModal(false);
+    // setShowModal(true);
   };
 
   const handleAccountSelected = (accountId: string) => {
@@ -167,22 +164,26 @@ const EmailsPage = () => {
           </button>
         </div>
       ) : (
-        <div className="p-4">
+        <div className="p-4 h-[calc(100vh-120px)]">
           <EmailsClient
-            emails={emails?.pages.flatMap((page) => page.emails) || []}
+            emails={emailsData?.pages.flatMap((page) => page.emails) || []}
             providers={accounts.map((acc) => acc.provider)}
             selectedAccount={selectedAccountId || undefined}
+            hasNextPage={hasNextPage}
+            isLoadingMore={isFetchingNextPage}
+            onLoadMore={handleLoadMore}
+            selectedEmailId={selectedEmailId || undefined}
           />
         </div>
       )}
 
       {/* Email integration modal */}
-      {showModal && (
+      {/* {showModal && (
         <EmailIntegrationModal
           onClose={() => setShowModal(false)}
           onAccountAdded={handleAccountAdded}
         />
-      )}
+      )} */}
     </>
   );
 };

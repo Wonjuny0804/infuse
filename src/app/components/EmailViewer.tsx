@@ -28,6 +28,30 @@ const EmailViewer = ({
       const iframeDoc = iframeRef.current.contentDocument;
       if (!iframeDoc) return;
 
+      // Add base styles to the iframe document
+      const style = iframeDoc.createElement("style");
+      style.textContent = `
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          margin: 0;
+          padding: 16px;
+        }
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+        a {
+          color: #2563eb;
+          text-decoration: none;
+        }
+        a:hover {
+          text-decoration: underline;
+        }
+      `;
+      iframeDoc.head.appendChild(style);
+
       const links = iframeDoc.querySelectorAll("a");
       links.forEach((link) => {
         link.setAttribute("target", "_blank");
@@ -89,43 +113,42 @@ const EmailViewer = ({
     );
   }
 
+  console.log("EMAIL CONTENT", emailContent);
+
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex-none p-4 md:p-6 border-b">
+    <div className=" flex flex-col h-full">
+      <div className="flex-none px-6 py-4">
         <h1 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4">
           {emailDetails.subject}
         </h1>
-        <div className="space-y-1 text-xs md:text-sm text-gray-600">
-          <div>
-            From: {emailContent?.headers?.from || emailDetails.from || "N/A"}
-          </div>
-          {emailContent?.headers?.to && (
-            <div>To: {emailContent.headers.to}</div>
-          )}
-          {emailContent?.headers?.cc && (
-            <div>CC: {emailContent.headers.cc}</div>
-          )}
-          <div className="text-gray-500">
-            {new Date(
-              emailContent?.headers?.date || emailDetails.date
-            ).toLocaleString()}
-          </div>
-        </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-2 md:p-4">
+      <div className="flex-1 min-h-0 p-2 md:p-4 h-[90%]">
         {emailContent?.html ? (
-          <div className="h-full">
+          <div className="h-[90%]">
             <iframe
               title={`Email content for ${emailDetails.subject}`}
-              srcDoc={emailContent.html}
+              srcDoc={`
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <base target="_blank">
+                  </head>
+                  <body>
+                    ${emailContent.html}
+                  </body>
+                </html>
+              `}
               className="w-full h-full border-none"
               sandbox="allow-same-origin allow-popups"
               ref={iframeRef}
+              style={{ height: "100%", minHeight: "300px" }}
             />
           </div>
         ) : (
-          <div className="whitespace-pre-wrap break-words font-mono text-sm p-2 md:p-4">
+          <div className="h-full overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm p-2 md:p-4">
             {emailContent?.text ||
               emailDetails.snippet ||
               "No text content available."}

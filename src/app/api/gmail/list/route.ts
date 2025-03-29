@@ -51,10 +51,25 @@ export async function GET(request: Request) {
           });
 
           const headers = email.data.payload?.headers;
+
+          /**
+           * sender sometimes comes in as "sender@sample.com" so we need to remove the ""
+           */
+          const sender = headers
+            ?.find((h) => h.name === "From")
+            ?.value?.replace(/"/g, "")
+            ?.trim();
+
+          const senderName = sender?.split("<")[0];
+          // use regex to get the email address
+          const senderEmail = sender?.match(/<([^>]+)>/)?.[1];
+
           return {
             id: email.data.id,
             subject: headers?.find((h) => h.name === "Subject")?.value,
             from: headers?.find((h) => h.name === "From")?.value,
+            sender: senderName,
+            senderEmail,
             snippet: email.data.snippet,
             date: headers?.find((h) => h.name === "Date")?.value,
             isUnread: email.data.labelIds?.includes("UNREAD") || false,

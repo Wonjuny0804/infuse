@@ -1,64 +1,188 @@
 import React from "react";
 import Link from "next/link";
 import { Email } from "@/types/email";
+import { formatDistanceToNow, format } from "date-fns";
+import { useEmailContent } from "@/hooks/useEmailContent";
+import EmailViewer from "./EmailViewer";
 
 interface Props {
   emails: Email[];
   providers: string[];
   selectedAccount?: string;
+  hasNextPage?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
+  selectedEmailId?: string;
 }
 
-const EmailsClient: React.FC<Props> = ({ emails, selectedAccount }) => {
+const EmailsClient: React.FC<Props> = ({
+  emails,
+  selectedAccount,
+  hasNextPage,
+  isLoadingMore,
+  onLoadMore,
+  selectedEmailId,
+}) => {
   // Filter emails by provider if selectedProvider is provided
   const filteredEmails = selectedAccount
     ? emails.filter((email) => email.accountId === selectedAccount)
     : emails;
+  const selectedEmail = emails.find((email) => email.id === selectedEmailId);
 
-  console.log("filteredEmails", filteredEmails, emails);
+  const formatEmailTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return (
+        formatDistanceToNow(date, {
+          addSuffix: false,
+          includeSeconds: true,
+        }).replace("about ", "") + " ago"
+      );
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatHeaderTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, "MMM dd, yyyy hh:mm aaa");
+    } catch {
+      return dateString;
+    }
+  };
+
+  // need to fetch the email details and content
+
+  const {
+    data: emailContent,
+    isLoading,
+    isError,
+    error,
+  } = useEmailContent(selectedEmail?.accountId || "", selectedEmailId || "");
+
+  console.log("emailContent", emailContent);
+
+  /**
+   {
+    "headers": {
+        "from": "Indeed <alert@indeed.com>",
+        "to": "<wonwonjun@gmail.com>",
+        "date": "Sat, 29 Mar 2025 01:17:04 +0000"
+    },
+    "html": string
+    "text": string;
+    "attachments": [],
+    "threadId": "195df7957d6b51cf",
+    "labelIds": [
+        "UNREAD",
+        "CATEGORY_UPDATES",
+        "INBOX"
+    ]
+}
+   * 
+   */
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="h-full grid grid-cols-12">
       {/* Email List */}
-      <div className="flex-grow overflow-auto">
+      <div className="col-span-3 overflow-y-auto border border-gray-100">
         {filteredEmails.length === 0 ? (
           <div className="flex justify-center items-center h-32">
             <p className="text-gray-500">No emails found</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="">
             {filteredEmails.map((email) => (
               <Link
                 href={`/dashboard/emails?provider=${email.provider}&emailId=${email.id}`}
                 key={email.id}
-                className={`block p-3 border rounded-lg hover:bg-gray-50 ${
-                  !email.read ? "border-blue-200 bg-blue-50" : "border-gray-200"
-                }`}
+                className="block hover:bg-gray-50"
               >
-                <div className="flex justify-between items-center">
-                  <span
-                    className={`font-medium ${
-                      !email.read ? "font-semibold" : ""
-                    }`}
-                  >
-                    {email.from}
-                  </span>
-                  <span className="text-sm text-gray-500">{email.date}</span>
-                </div>
-                <div className="mt-1">
-                  <h3 className={`${!email.read ? "font-semibold" : ""}`}>
+                <div className="px-4 py-3">
+                  <div className="flex justify-between items-baseline mb-1">
+                    <span
+                      className={`font-medium text-sm ${
+                        !email.read ? "text-gray-900" : "text-gray-700"
+                      }`}
+                    >
+                      {email.sender || email.senderEmail}
+                    </span>
+                    <span className="text-xs text-gray-500 ml-2">
+                      {formatEmailTime(email.date)}
+                    </span>
+                  </div>
+                  <div className="text-xs font-normal text-gray-900 mb-0.5">
                     {email.subject}
-                  </h3>
-                  <p className="text-sm text-gray-600 truncate mt-1">
-                    {email.preview}
-                  </p>
-                </div>
-                <div className="mt-2 text-xs text-gray-400">
-                  Provider: {email.provider}
+                  </div>
+                  <div className="text-xs font-normal text-gray-500 truncate">
+                    {email.snippet}
+                  </div>
                 </div>
               </Link>
             ))}
+
+            {/* Load More Button - Always show if there are more pages */}
+            {hasNextPage && (
+              <div className="py-3 flex justify-center">
+                <button
+                  onClick={onLoadMore}
+                  disabled={isLoadingMore}
+                  className="text-sm text-blue-600 hover:text-blue-700 disabled:text-blue-300"
+                >
+                  {isLoadingMore ? "Loading..." : "Load More"}
+                </button>
+              </div>
+            )}
           </div>
         )}
+      </div>
+      {/* Email  */}
+      <div className="col-span-9 overflow-y-hidden border border-gray-100">
+        {/* email header */}
+        <div className="px-6 py-4">
+          {selectedEmail && emailContent ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <span className="text-blue-600 font-medium text-lg">
+                    {(emailContent.headers?.from || selectedEmail.sender || "?")
+                      .charAt(0)
+                      .toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-medium text-gray-900">
+                    {emailContent.headers?.from ||
+                      selectedEmail.sender ||
+                      "Unknown Sender"}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {selectedEmail.senderEmail || "No email available"}
+                  </p>
+                </div>
+              </div>
+              <div className="text-sm text-gray-500">
+                {formatHeaderTime(
+                  emailContent.headers?.date || selectedEmail.date
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="h-20 flex items-center justify-center">
+              <p className="text-gray-500">Select an email to view details</p>
+            </div>
+          )}
+        </div>
+
+        <EmailViewer
+          emailDetails={selectedEmail}
+          emailContent={emailContent}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          emailId={selectedEmailId}
+        />
       </div>
     </div>
   );

@@ -19,6 +19,7 @@ export interface EmailContent {
     filename: string;
     size: number;
   }>;
+  labelIds?: string[];
 }
 
 export interface EmailService {
