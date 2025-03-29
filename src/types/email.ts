@@ -75,6 +75,7 @@ export interface EmailMessage {
 export type EmailProvider = "gmail" | "outlook" | "yahoo" | "naver" | "other";
 
 export interface UnifiedEmailListResponse {
+  provider: string;
   emails: Email[];
   nextCursor?: string;
   error?: {
@@ -86,5 +87,5 @@ export interface UnifiedEmailListResponse {
 export interface EmailList {
   emails?: Email[];
   messages?: Email[];
-  nextPageToken?: string;
+  nextCursor?: string;
 }

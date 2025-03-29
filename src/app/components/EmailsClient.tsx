@@ -61,28 +61,6 @@ const EmailsClient: React.FC<Props> = ({
     error,
   } = useEmailContent(selectedEmail?.accountId || "", selectedEmailId || "");
 
-  console.log("emailContent", emailContent);
-
-  /**
-   {
-    "headers": {
-        "from": "Indeed <alert@indeed.com>",
-        "to": "<wonwonjun@gmail.com>",
-        "date": "Sat, 29 Mar 2025 01:17:04 +0000"
-    },
-    "html": string
-    "text": string;
-    "attachments": [],
-    "threadId": "195df7957d6b51cf",
-    "labelIds": [
-        "UNREAD",
-        "CATEGORY_UPDATES",
-        "INBOX"
-    ]
-}
-   * 
-   */
-
   return (
     <div className="h-full grid grid-cols-12">
       {/* Email List */}
@@ -95,7 +73,9 @@ const EmailsClient: React.FC<Props> = ({
           <div className="">
             {filteredEmails.map((email) => (
               <Link
-                href={`/dashboard/emails?provider=${email.provider}&emailId=${email.id}`}
+                href={`/dashboard/emails?${
+                  selectedAccount ? `accountId=${selectedAccount}&` : ""
+                }provider=${email.provider}&emailId=${email.id}`}
                 key={email.id}
                 className="block hover:bg-gray-50"
               >

@@ -2,7 +2,7 @@ import { Email } from "@/types/email";
 
 export interface EmailList {
   emails: Email[];
-  nextPageToken?: string;
+  nextCursor?: string;
 }
 
 export interface EmailContent {

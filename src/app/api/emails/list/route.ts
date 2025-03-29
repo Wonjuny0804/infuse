@@ -6,7 +6,7 @@ import { Email, UnifiedEmailListResponse, EmailList } from "@/types/email";
 interface EmailResult {
   success: boolean;
   emails?: Email[];
-  nextPageToken?: string;
+  nextCursor?: string;
   provider: string;
   error?: string;
 }
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
         return {
           success: true,
           emails,
-          nextPageToken: result.nextPageToken,
+          nextCursor: result.nextCursor,
           provider: account.provider,
         } as EmailResult;
       } catch (error) {
@@ -112,15 +112,13 @@ export async function GET(request: Request) {
         message: result.error as string,
       }));
 
-    // Generate next cursor based on the oldest email's timestamp
-    const nextCursor =
-      allEmails.length === limit
-        ? new Date(allEmails[allEmails.length - 1].date).getTime().toString()
-        : undefined;
+    // probably need a cursor for each provider in the future.
+    // for gmail, it's the nextPageToken
 
     const response: UnifiedEmailListResponse = {
+      provider: accounts[0].provider,
       emails: allEmails,
-      nextCursor,
+      nextCursor: results[0].nextCursor, // TODO: need to change this to the correct cursor for the provider
       ...(errors.length > 0 && { error: errors }),
     };
 

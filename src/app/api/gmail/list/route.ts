@@ -42,6 +42,7 @@ export async function GET(request: Request) {
         maxResults: 20,
         pageToken: pageToken || undefined,
       });
+      console.log("RESPONSE", response.data);
 
       const emails = await Promise.all(
         response.data.messages?.map(async (message) => {
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
 
       return NextResponse.json({
         emails,
-        nextPageToken: response.data.nextPageToken,
+        nextCursor: response.data.nextPageToken,
       });
     } catch (error: unknown) {
       console.log("=== error ===", error);
