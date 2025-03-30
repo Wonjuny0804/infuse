@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import LandingPage from "./components/LandingPage";
+import LandingPage from "@/app/components/LandingPage";
 
 export default async function Home() {
   const supabase = await createClient();

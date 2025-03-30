@@ -52,22 +52,34 @@ export async function GET(request: Request) {
 
     const data = await graphResponse.json();
 
-    const emails = data.value.map((message: any) => ({
-      id: message.id,
-      threadId: message.id,
-      snippet: message.bodyPreview,
-      subject: message.subject,
-      from: {
-        name: message.from.emailAddress.name,
-        address: message.from.emailAddress.address,
-      },
-      to: message.toRecipients.map((recipient: any) => ({
-        name: recipient.emailAddress.name,
-        address: recipient.emailAddress.address,
-      })),
-      date: message.receivedDateTime,
-      isRead: message.isRead,
-    }));
+    const emails = data.value.map(
+      (message: {
+        id: string;
+        bodyPreview: string;
+        subject: string;
+        from: { emailAddress: { name: string; address: string } };
+        toRecipients: { emailAddress: { name: string; address: string } }[];
+        receivedDateTime: string;
+        isRead: boolean;
+      }) => ({
+        id: message.id,
+        threadId: message.id,
+        snippet: message.bodyPreview,
+        subject: message.subject,
+        from: {
+          name: message.from.emailAddress.name,
+          address: message.from.emailAddress.address,
+        },
+        to: message.toRecipients.map(
+          (recipient: { emailAddress: { name: string; address: string } }) => ({
+            name: recipient.emailAddress.name,
+            address: recipient.emailAddress.address,
+          })
+        ),
+        date: message.receivedDateTime,
+        isRead: message.isRead,
+      })
+    );
 
     return NextResponse.json({
       emails,
