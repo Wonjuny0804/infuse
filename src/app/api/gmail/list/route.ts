@@ -42,7 +42,6 @@ export async function GET(request: Request) {
         maxResults: 20,
         pageToken: pageToken || undefined,
       });
-      console.log("RESPONSE", response.data);
 
       const emails = await Promise.all(
         response.data.messages?.map(async (message) => {

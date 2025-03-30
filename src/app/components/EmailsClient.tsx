@@ -118,7 +118,7 @@ const EmailsClient: React.FC<Props> = ({
         )}
       </div>
       {/* Email  */}
-      <div className="col-span-9 overflow-y-hidden border border-gray-100">
+      <div className="col-span-9 overflow-y-auto border border-gray-100">
         {/* email header */}
         <div className="px-6 py-4">
           {selectedEmail && emailContent ? (
@@ -162,6 +162,7 @@ const EmailsClient: React.FC<Props> = ({
           isError={isError}
           error={error}
           emailId={selectedEmailId}
+          accountId={selectedEmail?.accountId}
         />
       </div>
     </div>

@@ -140,6 +140,106 @@ class GmailService extends EmailService {
       throw error;
     }
   }
+
+  async replyToEmail({
+    emailId,
+    content,
+    isHtml = false,
+    attachments = [],
+    isRetry = false,
+  }: {
+    emailId: string;
+    content: string;
+    isHtml?: boolean;
+    attachments?: Array<{
+      filename: string;
+      content: Blob | string;
+      contentType?: string;
+    }>;
+    isRetry?: boolean;
+  }): Promise<void> {
+    try {
+      // Prepare form data if there are attachments
+      let body;
+
+      if (attachments.length > 0) {
+        const formData = new FormData();
+        formData.append("content", content);
+        formData.append("isHtml", String(isHtml));
+
+        attachments.forEach((attachment, index) => {
+          if (attachment.content instanceof Blob) {
+            formData.append(
+              `attachment_${index}`,
+              attachment.content,
+              attachment.filename
+            );
+          } else {
+            // Handle string content (base64 or other)
+            const blob = new Blob([attachment.content], {
+              type: attachment.contentType || "application/octet-stream",
+            });
+            formData.append(`attachment_${index}`, blob, attachment.filename);
+          }
+
+          formData.append(`attachment_${index}_filename`, attachment.filename);
+          if (attachment.contentType) {
+            formData.append(
+              `attachment_${index}_contentType`,
+              attachment.contentType
+            );
+          }
+        });
+
+        body = formData;
+      } else {
+        // No attachments, use JSON
+        body = JSON.stringify({
+          content,
+          isHtml,
+        });
+      }
+
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${this.accessToken}`,
+        "X-Account-Id": this.accountId,
+      };
+
+      // Only set Content-Type for JSON requests
+      if (attachments.length === 0) {
+        headers["Content-Type"] = "application/json";
+      }
+
+      // must set headers x-account-id and authorization
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/gmail/messages/${emailId}/reply`,
+        {
+          method: "POST",
+          headers,
+          body,
+        }
+      );
+
+      if (response.status === 401 && !isRetry) {
+        const newToken = await this.refreshAccessToken();
+        this.accessToken = newToken;
+        return this.replyToEmail({
+          emailId,
+          content,
+          isHtml,
+          attachments,
+          isRetry: true,
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to reply to email");
+      }
+    } catch (error) {
+      console.error("Error in replyToEmail:", error);
+      throw error;
+    }
+  }
 }
 
 export default GmailService;

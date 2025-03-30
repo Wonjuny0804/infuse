@@ -35,6 +35,18 @@ export interface EmailService {
     isUnread: boolean;
   }) => Promise<void>;
 
+  // Reply to an email
+  replyToEmail: (params: {
+    emailId: string;
+    content: string;
+    isHtml?: boolean;
+    attachments?: Array<{
+      filename: string;
+      content: Blob | string;
+      contentType?: string;
+    }>;
+  }) => Promise<void>;
+
   // Add other email operations here as needed
   // fetchEmails: (params) => Promise<EmailList>;
   // fetchEmailContent: (params) => Promise<EmailContent>;

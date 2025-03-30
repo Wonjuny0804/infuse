@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus } from "lucide-react";
+import { PlusIcon as Plus } from "@radix-ui/react-icons";
 import Image from "next/image";
 import useUser from "@/hooks/useUser";
 import createClient from "@/lib/supabase/client";

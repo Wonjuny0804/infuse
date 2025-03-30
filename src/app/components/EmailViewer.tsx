@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Email, EmailContent } from "@/types/email";
+import QuillEditor from "./QuillEditor";
+import Quill, { Delta } from "quill";
+import useReplyToMail from "@/hooks/useReplyToMail";
 
-interface EmailViewerProps {
+interface Props {
   emailDetails: Email | undefined;
   emailContent: EmailContent | undefined;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
   emailId?: string;
+  accountId?: string;
 }
 
 const EmailViewer = ({
@@ -19,8 +23,17 @@ const EmailViewer = ({
   isError,
   error,
   emailId,
-}: EmailViewerProps) => {
+  accountId,
+}: Props) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const editorRef = useRef<Quill | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
+  const [, setEditorContent] = useState<Delta | null>(null);
+  const [replyStatus, setReplyStatus] = useState<
+    "idle" | "sending" | "success" | "error"
+  >("idle");
+
+  const replyToMail = useReplyToMail();
 
   useEffect(() => {
     const handleIframeLoad = () => {
@@ -80,6 +93,63 @@ const EmailViewer = ({
     };
   }, [emailContent]);
 
+  const handleSendReply = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    console.log("Send button clicked", {
+      editorRef: !!editorRef.current,
+      emailDetails: !!emailDetails,
+      accountId,
+      emailId,
+    });
+
+    if (!editorRef.current || !emailDetails || !accountId || !emailId) {
+      console.log("Send cancelled due to missing data", {
+        hasEditor: !!editorRef.current,
+        hasEmailDetails: !!emailDetails,
+        accountId,
+        emailId,
+      });
+      return;
+    }
+
+    const htmlContent = editorRef.current.root.innerHTML;
+    setReplyStatus("sending");
+
+    const recipientEmail =
+      typeof emailDetails.senderEmail === "string"
+        ? emailDetails.senderEmail
+        : emailDetails.from;
+
+    const replySubject = emailDetails.subject.startsWith("Re:")
+      ? emailDetails.subject
+      : `Re: ${emailDetails.subject}`;
+
+    replyToMail.mutate(
+      {
+        email: recipientEmail,
+        subject: replySubject,
+        message: htmlContent,
+        accountId,
+        emailId,
+        provider: emailDetails.provider,
+      },
+      {
+        onSuccess: () => {
+          setReplyStatus("success");
+          editorRef.current?.setText("");
+          setEditorContent(null);
+          setShowEditor(false);
+        },
+        onError: () => {
+          setReplyStatus("error");
+        },
+        onSettled: () => {
+          setTimeout(() => setReplyStatus("idle"), 3000);
+        },
+      }
+    );
+  };
+
   if (!emailId) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500">
@@ -113,19 +183,23 @@ const EmailViewer = ({
     );
   }
 
-  console.log("EMAIL CONTENT", emailContent);
-
   return (
-    <div className=" flex flex-col h-full">
-      <div className="flex-none px-6 py-4">
-        <h1 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4">
+    <div className="flex flex-col h-full">
+      <div className="flex-none px-6 py-4 flex justify-between items-center">
+        <h1 className="text-xl md:text-2xl font-semibold mb-0">
           {emailDetails.subject}
         </h1>
+        <button
+          className="px-4 py-2 text-sm font-medium text-white bg-brand-dark hover:bg-brand-primary/80 rounded-md transition-colors"
+          onClick={() => setShowEditor(!showEditor)}
+        >
+          {showEditor ? "Hide Reply" : "Reply"}
+        </button>
       </div>
 
       <div className="flex-1 min-h-0 p-2 md:p-4 h-[90%]">
         {emailContent?.html ? (
-          <div className="h-[90%]">
+          <div className="h-full">
             <iframe
               title={`Email content for ${emailDetails.subject}`}
               srcDoc={`
@@ -177,6 +251,58 @@ const EmailViewer = ({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {showEditor && (
+        <div className="flex-none pt-2 pb-2 px-4 bg-white">
+          <div className="px-4 bg-gray-50 rounded-lg pb-4 shadow-md">
+            <QuillEditor
+              editorRef={editorRef}
+              readOnly={false}
+              placeholder="Type Message..."
+              className="email-reply-editor"
+              showAttachmentTools={true}
+              recipientEmail={
+                typeof emailDetails.senderEmail === "string"
+                  ? emailDetails.senderEmail
+                  : emailDetails.from
+              }
+              onSelectionChange={(range) => {
+                console.log("Selection changed:", range);
+              }}
+              onTextChange={(delta) => {
+                console.log("Content changed:", delta);
+                setEditorContent(delta);
+              }}
+            />
+            <div className="flex justify-end mt-2">
+              {replyStatus === "error" && (
+                <div className="text-red-500 mr-4 self-center">
+                  Failed to send reply
+                </div>
+              )}
+              {replyStatus === "success" && (
+                <div className="text-green-500 mr-4 self-center">
+                  Reply sent successfully
+                </div>
+              )}
+              <button
+                className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors ${
+                  replyStatus === "sending"
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : !accountId
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-brand-dark hover:bg-brand-primary/80"
+                }`}
+                onClick={handleSendReply}
+                disabled={replyStatus === "sending" || !accountId}
+                title={!accountId ? "Account information is missing" : ""}
+              >
+                {replyStatus === "sending" ? "Sending..." : "Send"}
+              </button>
+            </div>
           </div>
         </div>
       )}

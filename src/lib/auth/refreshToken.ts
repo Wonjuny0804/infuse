@@ -7,13 +7,16 @@ export async function refreshGmailToken(accountId: string) {
   );
 
   try {
-    const response = await fetch("/api/gmail/refresh-token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ accountId }),
-    });
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/gmail/refresh-token`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ accountId }),
+      }
+    );
     console.log("Response:", response);
 
     if (!response.ok) {

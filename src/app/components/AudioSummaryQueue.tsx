@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createSupabaseClient } from "@/lib/supabase/client";
+import createSupabaseClient from "@/lib/supabase/client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Archive } from "lucide-react";
