@@ -2,9 +2,17 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Email, EmailContent } from "@/types/email";
-import QuillEditor from "./QuillEditor";
+import dynamic from "next/dynamic";
 import Quill, { Delta } from "quill";
 import useReplyToMail from "@/hooks/useReplyToMail";
+
+// Dynamically import QuillEditor with SSR disabled
+const QuillEditor = dynamic(() => import("./QuillEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="p-4 border rounded bg-gray-50">Loading editor...</div>
+  ),
+});
 
 interface Props {
   emailDetails: Email | undefined;

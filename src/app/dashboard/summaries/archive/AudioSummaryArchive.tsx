@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createSupabaseClient } from "@/lib/supabase/client";
+import createClient from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Play, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -23,7 +23,7 @@ export default function AudioSummaryArchive() {
   const { data: summaries, isLoading } = useQuery({
     queryKey: ["audioSummariesArchive"],
     queryFn: async () => {
-      const supabase = createSupabaseClient();
+      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();

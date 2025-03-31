@@ -26,7 +26,7 @@ interface EmailContent {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const accountId = request.headers.get("X-Account-Id");
@@ -188,7 +188,7 @@ export async function GET(
             .single();
 
           // Retry the request
-          return await GET(request, { params: { id: params.id } });
+          return await GET(request, { params });
         } catch (refreshError) {
           console.error("Error refreshing token:", refreshError);
           throw refreshError;

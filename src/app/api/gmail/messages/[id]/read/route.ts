@@ -6,7 +6,7 @@ import oauth2Client from "@/lib/google";
 
 export async function POST(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { params } = await context;
   const { id } = await params;

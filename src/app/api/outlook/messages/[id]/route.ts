@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const accountId = request.headers.get("X-Account-Id");
@@ -14,8 +14,8 @@ export async function GET(
       );
     }
 
-    const { params } = context;
-    const { id } = params;
+    const { params } = await context;
+    const { id } = await params;
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

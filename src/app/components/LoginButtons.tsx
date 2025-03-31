@@ -1,6 +1,6 @@
 "use client";
 
-import { createSupabaseClient } from "@/lib/supabase/client";
+import createClient from "@/lib/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -17,7 +17,7 @@ const LoginButtons = () => {
   const [isLoading, setIsLoading] = useState(false);
   const loginWithGoogle = async () => {
     try {
-      const supabase = createSupabaseClient();
+      const supabase = createClient();
       toast("Initiating Google login...");
       setIsLoading(true);
       const { data, error } = await supabase.auth.signInWithOAuth({

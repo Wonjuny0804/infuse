@@ -1,8 +1,9 @@
 import { emailContentRouter } from "@/services/email/router";
+import { NextRequest } from "next/server";
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { accountId: string; emailId: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ accountId: string; emailId: string }> }
 ) {
   const { accountId, emailId } = await params;
 
