@@ -1,0 +1,83 @@
+<context>
+# Overview  
+Infuse AI Labs designs and builds products that resolve problems in daily life and brings AI closer to everyday life.
+
+# Core Features  
+1. Smart Email Summarization
+- Function: Condenses long email threads into concise summaries.
+- Importance: Saves users time, allowing them to quickly grasp essential content.
+- High-Level Process: Uses advanced NLP algorithms to identify key points, actions, and relevant details.
+
+2. Task and Event Extraction
+- Function: Identifies and converts email content into actionable tasks or calendar events.
+- Importance: Improves productivity by clearly defining action items.
+- High-Level Process: Parses emails for phrases indicating tasks and dates, converting them to structured data.
+
+3. Multi-Account Integration
+- Function: Integrates multiple email accounts (initially Gmail and Naver).
+- Importance: Centralizes email management into one streamlined platform.
+- High-Level Process: Secure OAuth integration to aggregate and manage email content securely.
+
+4. Intelligent Reply Assistant
+- Function: Assists in drafting context-aware email replies.
+- Importance: Accelerates response times and maintains consistent communication quality.
+- High-Level Process: AI generates suggested replies based on email context and past user interactions.
+
+# User Experience  
+Describe the user journey and experience. Include:
+
+1. User Personas
+- Busy Professional: Manages heavy email traffic, values efficiency, and task clarity.
+- Remote Team Manager: Coordinates team activities via email, prioritizes structured communication and clear task delegation.
+
+2. Key User Flows
+- Onboarding Flow: Simple multi-account email setup with clear permissions management.
+- Daily Email Check: Summaries presented upon login with actionable tasks prominently displayed.
+- Reply and Interaction: Seamless suggestions integrated directly within the reply interface.
+
+3. UI/UX Considerations
+- Minimalist, distraction-free interface emphasizing clarity and simplicity.
+- Intuitive navigation prioritizing tasks and summaries with clear visual hierarchies.
+</context>
+<PRD>
+# Technical Architecture  
+[Outline the technical implementation details:
+- System components
+    - Frontend: Nextjs, Tailwindcss, React Query
+    - Backend: Supabase, Langgraph
+    - AI Engine: Langgraph, open source models, ChatGPT
+    - Database: PostgreSQL (managed via Supabase)
+- Data models
+
+- APIs and integrations
+    - Supabase Auth and backend APIs of Supabase
+- Infrastructure requirements]
+
+# Development Roadmap  
+Phase 1:
+- Gmail integration
+- Email summarization engine
+- Basic task extraction
+- Email Assistant using Langgraph and this codebase acting as a Langgraph client
+- Basic frontend interface
+Phase 2:
+- Enhanced Task using Email Assistant or Agent designed using Langgraph and integrating with it
+- Mobile App development as well as desktop app development
+
+# Logical Dependency Chain
+1. Auth
+2. Basic Email app features - list, view, reply, send
+3. Email AI Assistant development
+4. Email AI chatbot integration along with more agentic features such as, send on user behalf
+
+
+# Risks and Mitigations  
+Risk: NLP model accuracy and consistency
+- Mitigation: Continuous testing with user feedback loop and iterative model tuning
+
+# Appendix  
+Frontend: Nextjs15
+Backend: Supabase
+React 19
+Langgraph
+</PRD>

@@ -16,7 +16,38 @@ abstract class EmailService {
     isUnread: boolean;
   }): Promise<unknown>;
 
-  abstract refreshAccessToken(accountId: string): Promise<string>;
+  abstract refreshAccessToken(): Promise<string>;
+
+  abstract replyToEmail(params: {
+    emailId: string;
+    content: string;
+    isHtml?: boolean;
+    attachments?: Array<{
+      filename: string;
+      content: Blob | string;
+      contentType?: string;
+    }>;
+    to?: string;
+    subject?: string;
+    cc?: string;
+    bcc?: string;
+    isRetry?: boolean;
+  }): Promise<void>;
+
+  abstract sendEmail(params: {
+    to: string;
+    subject: string;
+    content: string;
+    isHtml?: boolean;
+    attachments?: Array<{
+      filename: string;
+      content: Blob | string;
+      contentType?: string;
+    }>;
+    cc?: string;
+    bcc?: string;
+    isRetry?: boolean;
+  }): Promise<void>;
 }
 
 export default EmailService;

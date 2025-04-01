@@ -7,9 +7,9 @@ export default class OutlookService extends EmailService {
     super(accessToken, accountId);
   }
 
-  async refreshAccessToken(accountId: string): Promise<string> {
+  async refreshAccessToken(): Promise<string> {
     try {
-      const newToken = await refreshOutlookToken(accountId);
+      const newToken = await refreshOutlookToken(this.accountId);
       if (!newToken) {
         throw new Error("Failed to refresh token");
       }
@@ -39,7 +39,7 @@ export default class OutlookService extends EmailService {
       );
 
       if (response.status === 401 && !isRetry) {
-        const newToken = await this.refreshAccessToken(this.accountId);
+        const newToken = await this.refreshAccessToken();
         this.accessToken = newToken;
         return this.listEmails({
           pageToken,
@@ -74,7 +74,7 @@ export default class OutlookService extends EmailService {
       });
 
       if (response.status === 401 && !isRetry) {
-        const newToken = await this.refreshAccessToken(this.accountId);
+        const newToken = await this.refreshAccessToken();
         this.accessToken = newToken;
         return this.getEmail({
           emailId,
@@ -114,7 +114,7 @@ export default class OutlookService extends EmailService {
       });
 
       if (response.status === 401 && !isRetry) {
-        const newToken = await this.refreshAccessToken(this.accountId);
+        const newToken = await this.refreshAccessToken();
         this.accessToken = newToken;
         return this.updateReadStatus({
           emailId,
@@ -176,7 +176,7 @@ export default class OutlookService extends EmailService {
 
       // Handle retry logic if token expired
       if (false /* check for auth error */ && !isRetry) {
-        const newToken = await this.refreshAccessToken(this.accountId);
+        const newToken = await this.refreshAccessToken();
         this.accessToken = newToken;
         return this.replyToEmail({
           emailId,
@@ -194,6 +194,74 @@ export default class OutlookService extends EmailService {
       // More implementation details...
     } catch (error) {
       console.error("Error in replyToEmail:", error);
+      throw error;
+    }
+  }
+
+  async sendEmail({
+    to,
+    subject,
+    content,
+    isHtml = false,
+    attachments = [],
+    cc,
+    bcc,
+    isRetry = false,
+  }: {
+    to: string;
+    subject: string;
+    content: string;
+    isHtml?: boolean;
+    attachments?: Array<{
+      filename: string;
+      content: Blob | string;
+      contentType?: string;
+    }>;
+    cc?: string;
+    bcc?: string;
+    isRetry?: boolean;
+  }): Promise<void> {
+    try {
+      // Implementation for Outlook email service
+      // This would use Outlook specific APIs to send a new email
+
+      // Use the parameters to construct appropriate email
+      console.log("Sending email via Outlook", {
+        to,
+        cc,
+        bcc,
+        subject,
+      });
+
+      if (isRetry) {
+        console.log("This is a retry attempt");
+      }
+
+      // Handle attachments if present
+      if (attachments.length > 0) {
+        console.log(`Email has ${attachments.length} attachments`);
+        // Process attachments here
+      }
+
+      // Handle retry logic if token expired
+      if (false /* check for auth error */ && !isRetry) {
+        const newToken = await this.refreshAccessToken();
+        this.accessToken = newToken;
+        return this.sendEmail({
+          to,
+          subject,
+          content,
+          isHtml,
+          attachments,
+          cc,
+          bcc,
+          isRetry: true,
+        });
+      }
+
+      // More implementation details...
+    } catch (error) {
+      console.error("Error in sendEmail:", error);
       throw error;
     }
   }

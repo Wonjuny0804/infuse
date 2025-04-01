@@ -228,7 +228,14 @@ class GmailService extends EmailService {
         headers["Content-Type"] = "application/json";
       }
 
-      // must set headers x-account-id and authorization
+      console.log("Sending Gmail reply request", {
+        hasAttachments: attachments.length > 0,
+        contentType:
+          attachments.length === 0 ? "application/json" : "multipart/form-data",
+        endpoint: `${process.env.NEXT_PUBLIC_BASE_URL}/api/gmail/messages/${emailId}/reply`,
+      });
+
+      // Send the request
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/gmail/messages/${emailId}/reply`,
         {
@@ -255,10 +262,132 @@ class GmailService extends EmailService {
       }
 
       if (!response.ok) {
-        throw new Error("Failed to reply to email");
+        const errorText = await response.text();
+        console.error("Gmail reply failed:", response.status, errorText);
+        throw new Error(
+          `Failed to reply to email: ${response.status} ${errorText}`
+        );
       }
     } catch (error) {
       console.error("Error in replyToEmail:", error);
+      throw error;
+    }
+  }
+
+  async sendEmail({
+    to,
+    subject,
+    content,
+    isHtml = true,
+    attachments = [],
+    cc,
+    bcc,
+    isRetry = false,
+  }: {
+    to: string;
+    subject: string;
+    content: string;
+    isHtml?: boolean;
+    attachments?: Array<{
+      filename: string;
+      content: Blob | string;
+      contentType?: string;
+    }>;
+    cc?: string;
+    bcc?: string;
+    isRetry?: boolean;
+  }): Promise<void> {
+    try {
+      // Prepare form data if there are attachments
+      let body;
+
+      if (attachments.length > 0) {
+        const formData = new FormData();
+        formData.append("to", to);
+        formData.append("subject", subject);
+        formData.append("content", content);
+        formData.append("isHtml", String(isHtml));
+
+        // Add optional recipient info to form data
+        if (cc) formData.append("cc", cc);
+        if (bcc) formData.append("bcc", bcc);
+
+        attachments.forEach((attachment, index) => {
+          if (attachment.content instanceof Blob) {
+            formData.append(
+              `attachment_${index}`,
+              attachment.content,
+              attachment.filename
+            );
+          } else {
+            // Handle string content (base64 or other)
+            const blob = new Blob([attachment.content], {
+              type: attachment.contentType || "application/octet-stream",
+            });
+            formData.append(`attachment_${index}`, blob, attachment.filename);
+          }
+
+          formData.append(`attachment_${index}_filename`, attachment.filename);
+          if (attachment.contentType) {
+            formData.append(
+              `attachment_${index}_contentType`,
+              attachment.contentType
+            );
+          }
+        });
+
+        body = formData;
+      } else {
+        // No attachments, use JSON
+        body = JSON.stringify({
+          to,
+          subject,
+          content,
+          isHtml,
+          cc,
+          bcc,
+        });
+      }
+
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${this.accessToken}`,
+        "X-Account-Id": this.accountId,
+      };
+
+      // Only set Content-Type for JSON requests
+      if (attachments.length === 0) {
+        headers["Content-Type"] = "application/json";
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/gmail/messages/send`,
+        {
+          method: "POST",
+          headers,
+          body,
+        }
+      );
+
+      if (response.status === 401 && !isRetry) {
+        const newToken = await this.refreshAccessToken();
+        this.accessToken = newToken;
+        return this.sendEmail({
+          to,
+          subject,
+          content,
+          isHtml,
+          attachments,
+          cc,
+          bcc,
+          isRetry: true,
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to send email");
+      }
+    } catch (error) {
+      console.error("Error in sendEmail:", error);
       throw error;
     }
   }
