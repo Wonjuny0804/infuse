@@ -144,9 +144,13 @@ class GmailService extends EmailService {
   async replyToEmail({
     emailId,
     content,
-    isHtml = false,
+    isHtml = true,
     attachments = [],
     isRetry = false,
+    to,
+    subject,
+    cc,
+    bcc,
   }: {
     emailId: string;
     content: string;
@@ -157,6 +161,10 @@ class GmailService extends EmailService {
       contentType?: string;
     }>;
     isRetry?: boolean;
+    to?: string;
+    subject?: string;
+    cc?: string;
+    bcc?: string;
   }): Promise<void> {
     try {
       // Prepare form data if there are attachments
@@ -166,6 +174,12 @@ class GmailService extends EmailService {
         const formData = new FormData();
         formData.append("content", content);
         formData.append("isHtml", String(isHtml));
+
+        // Add recipient info to form data
+        if (to) formData.append("to", to);
+        if (subject) formData.append("subject", subject);
+        if (cc) formData.append("cc", cc);
+        if (bcc) formData.append("bcc", bcc);
 
         attachments.forEach((attachment, index) => {
           if (attachment.content instanceof Blob) {
@@ -197,6 +211,10 @@ class GmailService extends EmailService {
         body = JSON.stringify({
           content,
           isHtml,
+          to,
+          subject,
+          cc,
+          bcc,
         });
       }
 
@@ -229,6 +247,10 @@ class GmailService extends EmailService {
           isHtml,
           attachments,
           isRetry: true,
+          to,
+          subject,
+          cc,
+          bcc,
         });
       }
 

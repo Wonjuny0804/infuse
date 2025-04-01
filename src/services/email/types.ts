@@ -45,6 +45,11 @@ export interface EmailService {
       content: Blob | string;
       contentType?: string;
     }>;
+    to?: string;
+    subject?: string;
+    cc?: string;
+    bcc?: string;
+    isRetry?: boolean;
   }) => Promise<void>;
 
   // Add other email operations here as needed

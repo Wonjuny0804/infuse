@@ -21,7 +21,7 @@ export async function POST(
 
     const { params } = context;
     const { id } = await params;
-    const { content, subject } = await request.json();
+    const { content, subject, to, cc, bcc } = await request.json();
 
     // Get access token from Supabase
     const supabase = await createClient();
@@ -65,7 +65,8 @@ export async function POST(
         null,
         originalFrom.trim(),
       ];
-      const replyToEmail = fromMatch[1];
+      // Use the provided To address or default to the original sender
+      const replyToEmail = to || fromMatch[1];
 
       // Prepare email headers
       const emailSubject =
@@ -73,21 +74,45 @@ export async function POST(
           ? originalSubject
           : `Re: ${originalSubject}`;
 
-      // Create the raw email
-      const references = messageId ? `References: ${messageId}\r\n` : "";
-      const inReplyTo = messageId ? `In-Reply-To: ${messageId}\r\n` : "";
+      // Create a boundary for multipart message
+      const boundary = `===${Math.random().toString(36).substring(2)}===`;
 
-      const emailContent = [
-        `From: ${account.email_address}`,
-        `To: ${replyToEmail}`,
-        `Subject: ${emailSubject}`,
-        "MIME-Version: 1.0",
-        "Content-Type: text/html; charset=UTF-8",
-        references,
-        inReplyTo,
-        "",
-        content,
-      ].join("\r\n");
+      // Create a plain text version of the HTML content
+      const plainTextContent = content.replace(/<[^>]*>/g, "");
+
+      // Generate Message-ID
+      const generateMessageId = () => {
+        const random = Math.random().toString(36).substring(2);
+        const timestamp = Date.now();
+        return `<${random}.${timestamp}@${new URL(baseUrl).hostname}>`;
+      };
+
+      // Get current date in RFC 2822 format
+      const date = new Date().toUTCString();
+
+      const emailContent = `From: ${account.email_address}
+To: ${replyToEmail}${cc ? `\nCc: ${cc}` : ""}${bcc ? `\nBcc: ${bcc}` : ""}
+Subject: ${emailSubject}
+Date: ${date}
+Message-ID: ${generateMessageId()}${
+        messageId ? `\nReferences: ${messageId}` : ""
+      }${messageId ? `\nIn-Reply-To: ${messageId}` : ""}
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="${boundary}"
+
+--${boundary}
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+${plainTextContent}
+
+--${boundary}
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+${content}
+
+--${boundary}--`;
 
       // Encode the email in base64 with URL safe chars
       const encodedEmail = Buffer.from(emailContent)
@@ -101,7 +126,7 @@ export async function POST(
         userId: "me",
         requestBody: {
           raw: encodedEmail,
-          threadId,
+          threadId: threadId,
         },
       });
 
@@ -111,6 +136,7 @@ export async function POST(
         threadId: res.data.threadId,
       });
     } catch (error: unknown) {
+      console.error(error);
       if (
         error instanceof GaxiosError &&
         error.message?.includes("Invalid Credentials")

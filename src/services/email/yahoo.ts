@@ -138,6 +138,10 @@ export default class YahooService extends EmailService {
     isHtml = false,
     attachments = [],
     isRetry = false,
+    to,
+    subject,
+    cc,
+    bcc,
   }: {
     emailId: string;
     content: string;
@@ -148,6 +152,10 @@ export default class YahooService extends EmailService {
       contentType?: string;
     }>;
     isRetry?: boolean;
+    to?: string;
+    subject?: string;
+    cc?: string;
+    bcc?: string;
   }): Promise<void> {
     try {
       // Prepare form data if there are attachments
@@ -157,6 +165,12 @@ export default class YahooService extends EmailService {
         const formData = new FormData();
         formData.append("content", content);
         formData.append("isHtml", String(isHtml));
+
+        // Add recipient info to form data
+        if (to) formData.append("to", to);
+        if (subject) formData.append("subject", subject);
+        if (cc) formData.append("cc", cc);
+        if (bcc) formData.append("bcc", bcc);
 
         attachments.forEach((attachment, index) => {
           if (attachment.content instanceof Blob) {
@@ -188,6 +202,10 @@ export default class YahooService extends EmailService {
         body = JSON.stringify({
           content,
           isHtml,
+          to,
+          subject,
+          cc,
+          bcc,
         });
       }
 
@@ -201,14 +219,11 @@ export default class YahooService extends EmailService {
         headers["Content-Type"] = "application/json";
       }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/yahoo/messages/${emailId}/reply`,
-        {
-          method: "POST",
-          headers,
-          body,
-        }
-      );
+      const response = await fetch(`/api/yahoo/messages/${emailId}/reply`, {
+        method: "POST",
+        headers,
+        body,
+      });
 
       if (response.status === 401 && !isRetry) {
         const newToken = await this.refreshAccessToken();
@@ -219,6 +234,10 @@ export default class YahooService extends EmailService {
           isHtml,
           attachments,
           isRetry: true,
+          to,
+          subject,
+          cc,
+          bcc,
         });
       }
 

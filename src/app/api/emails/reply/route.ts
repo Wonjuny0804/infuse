@@ -14,9 +14,11 @@ export async function POST(request: NextRequest) {
     provider,
     isHtml = false,
     attachments = [],
+    cc,
+    bcc,
   } = await request.json();
 
-  console.log(email, subject, message, accountId, emailId, provider);
+  console.log(email, subject, message, accountId, emailId, provider, cc, bcc);
 
   try {
     // Get account details to retrieve accessToken
@@ -60,6 +62,10 @@ export async function POST(request: NextRequest) {
       content: message,
       isHtml,
       attachments,
+      to: email,
+      subject,
+      cc,
+      bcc,
     });
 
     // Return success response
