@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import { GaxiosError } from "googleapis-common";
 import oauth2Client from "@/lib/google";
 
@@ -18,10 +18,7 @@ export async function GET(request: Request) {
     const pageToken = url.searchParams.get("pageToken");
 
     // Get access token from Supabase
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = await createClient();
 
     const { data: account } = await supabase
       .from("email_accounts")
