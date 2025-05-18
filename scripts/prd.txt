@@ -1,83 +1,148 @@
 <context>
 # Overview  
-Infuse AI Labs designs and builds products that resolve problems in daily life and brings AI closer to everyday life.
+[Project Name] is a modern web application that [brief description of what the app does]. It provides users with [main value proposition].
 
 # Core Features  
-1. Smart Email Summarization
-- Function: Condenses long email threads into concise summaries.
-- Importance: Saves users time, allowing them to quickly grasp essential content.
-- High-Level Process: Uses advanced NLP algorithms to identify key points, actions, and relevant details.
+1. **Core Feature 1**
+   - Sub-feature 1
+   - Sub-feature 2
+   - Sub-feature 3
 
-2. Task and Event Extraction
-- Function: Identifies and converts email content into actionable tasks or calendar events.
-- Importance: Improves productivity by clearly defining action items.
-- High-Level Process: Parses emails for phrases indicating tasks and dates, converting them to structured data.
+2. **Core Feature 2**
+   - Sub-feature 1
+   - Sub-feature 2
+   - Sub-feature 3
 
-3. Multi-Account Integration
-- Function: Integrates multiple email accounts (initially Gmail and Naver).
-- Importance: Centralizes email management into one streamlined platform.
-- High-Level Process: Secure OAuth integration to aggregate and manage email content securely.
-
-4. Intelligent Reply Assistant
-- Function: Assists in drafting context-aware email replies.
-- Importance: Accelerates response times and maintains consistent communication quality.
-- High-Level Process: AI generates suggested replies based on email context and past user interactions.
+3. **User Experience**
+   - Clean, modern interface with dark/light mode
+   - Responsive design for all devices
+   - Intuitive navigation and interactions
 
 # User Experience  
-Describe the user journey and experience. Include:
+## User Personas
+1. **Primary User**
+   - Main goals and needs
+   - Pain points to address
+   - Expected behaviors
 
-1. User Personas
-- Busy Professional: Manages heavy email traffic, values efficiency, and task clarity.
-- Remote Team Manager: Coordinates team activities via email, prioritizes structured communication and clear task delegation.
+2. **Secondary User**
+   - Main goals and needs
+   - Pain points to address
+   - Expected behaviors
 
-2. Key User Flows
-- Onboarding Flow: Simple multi-account email setup with clear permissions management.
-- Daily Email Check: Summaries presented upon login with actionable tasks prominently displayed.
-- Reply and Interaction: Seamless suggestions integrated directly within the reply interface.
+## Key User Flows
+1. **Onboarding**
+   - User registration/sign-in
+   - Initial setup and preferences
+   - First-time user experience
 
-3. UI/UX Considerations
-- Minimalist, distraction-free interface emphasizing clarity and simplicity.
-- Intuitive navigation prioritizing tasks and summaries with clear visual hierarchies.
+2. **Core Interaction**
+   - Main user journey
+   - Key actions and screens
+   - Success criteria
 </context>
+
 <PRD>
 # Technical Architecture  
-[Outline the technical implementation details:
-- System components
-    - Frontend: Nextjs, Tailwindcss, React Query
-    - Backend: Supabase, Langgraph
-    - AI Engine: Langgraph, open source models, ChatGPT
-    - Database: PostgreSQL (managed via Supabase)
-- Data models
+## Frontend Stack
+1. **Framework & Language**
+   - Next.js 14+ with App Router
+   - TypeScript for type safety
+   - React 18+ with hooks
 
-- APIs and integrations
-    - Supabase Auth and backend APIs of Supabase
-- Infrastructure requirements]
+2. **Styling**
+   - Tailwind CSS for utility-first styling
+   - CSS Modules for component-scoped styles
+   - Framer Motion for animations
+
+3. **State Management**
+   - React Context API for global state
+   - React Query for server state
+   - Local storage for persistence
+
+4. **UI Components**
+   - ShadCN/UI components
+   - Custom design system
+   - Responsive layouts
 
 # Development Roadmap  
-Phase 1:
-- Gmail integration
-- Email summarization engine
-- Basic task extraction
-- Email Assistant using Langgraph and this codebase acting as a Langgraph client
-- Basic frontend interface
-Phase 2:
-- Enhanced Task using Email Assistant or Agent designed using Langgraph and integrating with it
-- Mobile App development as well as desktop app development
+## Phase 1: Foundation
+1. **Project Setup**
+   - Initialize Next.js with TypeScript
+   - Configure ESLint, Prettier, Husky
+   - Setup Git repository and CI/CD
+
+2. **UI/UX Foundation**
+   - Design system setup
+   - Theme provider and theming
+   - Responsive layout components
+
+3. **Core Features**
+   - [Feature 1]
+   - [Feature 2]
+   - [Feature 3]
+
+## Phase 2: Enhancement
+1. **Performance**
+   - Code splitting
+   - Image optimization
+   - Lazy loading
+
+2. **Advanced Features**
+   - [Advanced Feature 1]
+   - [Advanced Feature 2]
+
+## Phase 3: Polish
+1. **User Feedback**
+   - Analytics integration
+   - Error tracking
+   - Performance monitoring
+
+2. **Refinement**
+   - Accessibility improvements
+   - Browser compatibility
+   - Performance optimization
 
 # Logical Dependency Chain
-1. Auth
-2. Basic Email app features - list, view, reply, send
-3. Email AI Assistant development
-4. Email AI chatbot integration along with more agentic features such as, send on user behalf
+1. **Foundation**
+   - Project setup and configuration
+   - Authentication (if needed)
+   - Core UI components
 
+2. **Core Functionality**
+   - Main features implementation
+   - Data fetching and state management
+   - User interactions
+
+3. **Enhancements**
+   - Performance optimization
+   - Additional features
+   - Polish and refinement
 
 # Risks and Mitigations  
-Risk: NLP model accuracy and consistency
-- Mitigation: Continuous testing with user feedback loop and iterative model tuning
+1. **Technical Debt**
+   - Risk: Accumulation of quick fixes
+   - Mitigation: Regular refactoring and code reviews
+
+2. **Performance**
+   - Risk: Slow page loads or interactions
+   - Mitigation: Performance budgets and monitoring
+
+3. **Browser Compatibility**
+   - Risk: Inconsistent behavior across browsers
+   - Mitigation: Cross-browser testing strategy
 
 # Appendix  
-Frontend: Nextjs15
-Backend: Supabase
-React 19
-Langgraph
+## Technical Specifications
+- Next.js 14+ with App Router
+- TypeScript 5.0+
+- React 18+
+- Tailwind CSS 3.0+
+- Node.js 18+
+
+## Development Tools
+- VS Code with recommended extensions
+- ESLint and Prettier for code quality
+- Husky for Git hooks
+- GitHub Actions for CI/CD
 </PRD>

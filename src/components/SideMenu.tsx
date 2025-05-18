@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   ExitIcon,
-  EnvelopeClosedIcon,
   FileTextIcon,
   GearIcon,
   HomeIcon,
@@ -11,6 +10,7 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import useUser from "@/hooks/useUser";
 import createClient from "@/lib/supabase/client";
+
 const SideMenu = () => {
   const router = useRouter();
   const pathname = usePathname();
@@ -29,11 +29,6 @@ const SideMenu = () => {
       href: "/dashboard",
       icon: <HomeIcon className="w-5 h-5" />,
       label: "Dashboard",
-    },
-    {
-      href: "/dashboard/emails",
-      icon: <EnvelopeClosedIcon className="w-5 h-5" />,
-      label: "Emails",
     },
     {
       href: "/dashboard/summaries",
@@ -56,18 +51,16 @@ const SideMenu = () => {
   return (
     <aside className="fixed top-0 left-0 h-full group w-16 hover:w-64 transition-all duration-300 ease-in-out bg-white border-r border-gray-200 z-40">
       <div className="flex flex-col h-full">
-        {/* Logo */}
         <div className="h-16 flex items-center justify-center border-b border-gray-200">
           <Link href="/" className="inline-flex items-center">
             <span className="text-lg font-bold text-brand-dark">
-              <span>If</span>
-              <span className="hidden group-hover:inline">use</span>
+              <span className="group-hover:hidden">IAL</span>
+              <span className="hidden group-hover:inline">Infuse</span>
               <span className="text-brand-dark/30">.</span>
             </span>
           </Link>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 py-4">
           <ul className="space-y-2 px-3">
             {menuItems.map((item) => (

@@ -10,13 +10,7 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-const SCOPES = [
-  "email",
-  "https://www.googleapis.com/auth/gmail.addons.current.message.readonly",
-  "https://www.googleapis.com/auth/gmail.modify",
-  "https://www.googleapis.com/auth/gmail.readonly",
-  "profile",
-];
+const SCOPES = ["email", "profile"];
 
 const SignInForm = () => {
   const [email, setEmail] = useState("");

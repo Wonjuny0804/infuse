@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Roboto, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-
-const roboto = Roboto({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "700", "900"],
-  variable: "--font-roboto",
-});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${roboto.variable} ${inter.variable}`}>
+    <html lang="en" className={`${inter.variable}`}>
       <body>
         <Providers>{children}</Providers>
       </body>

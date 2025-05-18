@@ -1,7 +1,6 @@
 "use client";
 
 import SideMenu from "@/components/SideMenu";
-import { GridBackground } from "@/app/components/GridBackground";
 
 export default function DashboardLayout({
   children,
@@ -10,7 +9,6 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex h-screen relative">
-      <GridBackground />
       <div className="absolute inset-0 -z-10 bg-grid-pattern bg-gray-50" />
       <SideMenu />
 
